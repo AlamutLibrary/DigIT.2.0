@@ -1,0 +1,6 @@
+name = "alamut-proxy"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# The API key is stored as a secret, NOT here.
+# Run: wrangler secret put ANTHROPIC_API_KEY

@@ -1,0 +1,14 @@
+00#VERS#CLENGTH##: 14702
+00#VERS#LENGTH###: 3487
+00#VERS#URI######: 0470MuayyadFiDinShirazi.RisalatDuhat.Noorlib0034819BK3-ara1
+80#VERS#BASED####: permalink, permalink, permalink
+80#VERS#COLLATED#: permalink, permalink, permalink
+80#VERS#LINKS####: all@id, vol1@id, vol2@id, vol3@id, volX@id
+90#VERS#ANNOTATOR: the name of the annotator (latin characters; please
+    use consistently)
+90#VERS#COMMENT##: Aslisho split the original 0361AbuYaqubSijistaniRasail.Noorlib0034819-ara1 into three parts:
+  * 0361AbuYacqubSijistani.TuhfatMustajibin.Noorlib0034819BK1-ara1
+  * 0470MuayyadFiDinShirazi.RisalatDuhat.Noorlib0034819BK3-ara1
+  * 0854MuhammadBinSacdRafna.RisalatKafiyya.Noorlib0034819BK2-ara1
+90#VERS#DATE#####: YYYY-MM-DD
+90#VERS#ISSUES###: formalized issues, separated with commas

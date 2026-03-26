@@ -1,0 +1,63 @@
+# Alamut Library — Digital Ismaili Texts
+# texts.yml — Manifest of all texts in this repository
+#
+# Each entry tells the app where to find the raw text and its metadata YAML.
+# Paths are relative to the root of this repository.
+# Supported text extensions: .ara1 .ara2 .per1 .per2 .txt .md (OpenITI format)
+
+texts:
+
+  - id: nasir_khusraw_wajh_al_din
+    title: "Wajh-i Din"
+    author: "Nasir Khusraw"
+    date: "c. 1060 CE"
+    language: persian          # ar | fa | en
+    genre: theology
+    branch: main
+    raw_text_path: "texts/nasir.khusraw.wajh_al-din.per1"
+    github_path: "texts/nasir.khusraw.wajh_al-din.yml"
+    uri: "0394NasirKhusraw.WajhDin"
+
+  - id: nasir_khusraw_zad_al_musafirin
+    title: "Zad al-Musafirin"
+    author: "Nasir Khusraw"
+    date: "c. 1060 CE"
+    language: persian
+    genre: philosophy
+    branch: main
+    raw_text_path: "texts/nasir.khusraw.zad_al-musafirin.per1"
+    github_path: "texts/nasir.khusraw.zad_al-musafirin.yml"
+    uri: "0394NasirKhusraw.ZadMusafirin"
+
+  - id: ikhwan_al_safa_rasail
+    title: "Rasail Ikhwan al-Safa"
+    author: "Ikhwan al-Safa"
+    date: "c. 10th century CE"
+    language: arabic
+    genre: philosophy
+    branch: main
+    raw_text_path: "texts/ikhwan.al-safa.rasail.ara1"
+    github_path: "texts/ikhwan.al-safa.rasail.yml"
+    uri: "0360IkhwanSafa.Rasail"
+
+  - id: al_sijistani_kashf_al_mahjub
+    title: "Kashf al-Mahjub"
+    author: "Abu Yaqub al-Sijistani"
+    date: "c. 970 CE"
+    language: arabic
+    genre: theology
+    branch: main
+    raw_text_path: "texts/al-sijistani.kashf_al-mahjub.ara1"
+    github_path: "texts/al-sijistani.kashf_al-mahjub.yml"
+    uri: "0330Sijistani.KashfMahjub"
+
+  - id: al_kirmani_rahat_al_aql
+    title: "Rahat al-Aql"
+    author: "Hamid al-Din al-Kirmani"
+    date: "c. 1020 CE"
+    language: arabic
+    genre: philosophy
+    branch: main
+    raw_text_path: "texts/al-kirmani.rahat_al-aql.ara1"
+    github_path: "texts/al-kirmani.rahat_al-aql.yml"
+    uri: "0411Kirmani.RahatAql"

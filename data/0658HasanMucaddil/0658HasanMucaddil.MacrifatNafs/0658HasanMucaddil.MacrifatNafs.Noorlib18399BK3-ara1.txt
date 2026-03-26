@@ -1,0 +1,16 @@
+00#VERS#CLENGTH##: 9362
+00#VERS#LENGTH###: 1901
+00#VERS#URI######: 0658HasanMucaddil.MacrifatNafs.Noorlib18399BK3-ara1
+80#VERS#BASED####: permalink, permalink, permalink
+80#VERS#COLLATED#: permalink, permalink, permalink
+80#VERS#LINKS####: all@id, vol1@id, vol2@id, vol3@id, volX@id
+90#VERS#ANNOTATOR: the name of the annotator (latin characters; please
+    use consistently)
+90#VERS#COMMENT##: The original text file contained four separate books.
+    PV split it into four text files:
+    * 0346JacfarBinMansurYaman.CalimWaGhulam.Noorlib18399BK1-ara1
+    * 0626IbnHanzalaWadici.DiyaHulum.Noorlib18399BK2-ara1
+    * 0658HasanMucaddil.MacrifatNafs.Noorlib18399BK3-ara1
+    * 0658HasanMucaddil.MubtadaCawalim.Noorlib18399BK4-ara1
+90#VERS#DATE#####: YYYY-MM-DD
+90#VERS#ISSUES###: formalized issues, separated with commas
