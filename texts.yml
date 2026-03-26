@@ -1,63 +1,519 @@
-# Alamut Library — Digital Ismaili Texts
-# texts.yml — Manifest of all texts in this repository
-#
-# Each entry tells the app where to find the raw text and its metadata YAML.
-# Paths are relative to the root of this repository.
-# Supported text extensions: .ara1 .ara2 .per1 .per2 .txt .md (OpenITI format)
-
 texts:
-
-  - id: nasir_khusraw_wajh_al_din
-    title: "Wajh-i Din"
-    author: "Nasir Khusraw"
-    date: "c. 1060 CE"
-    language: persian          # ar | fa | en
-    genre: theology
-    branch: main
-    raw_text_path: "texts/nasir.khusraw.wajh_al-din.per1"
-    github_path: "texts/nasir.khusraw.wajh_al-din.yml"
-    uri: "0394NasirKhusraw.WajhDin"
-
-  - id: nasir_khusraw_zad_al_musafirin
-    title: "Zad al-Musafirin"
-    author: "Nasir Khusraw"
-    date: "c. 1060 CE"
-    language: persian
-    genre: philosophy
-    branch: main
-    raw_text_path: "texts/nasir.khusraw.zad_al-musafirin.per1"
-    github_path: "texts/nasir.khusraw.zad_al-musafirin.yml"
-    uri: "0394NasirKhusraw.ZadMusafirin"
-
-  - id: ikhwan_al_safa_rasail
-    title: "Rasail Ikhwan al-Safa"
-    author: "Ikhwan al-Safa"
-    date: "c. 10th century CE"
-    language: arabic
-    genre: philosophy
-    branch: main
-    raw_text_path: "texts/ikhwan.al-safa.rasail.ara1"
-    github_path: "texts/ikhwan.al-safa.rasail.yml"
-    uri: "0360IkhwanSafa.Rasail"
-
-  - id: al_sijistani_kashf_al_mahjub
-    title: "Kashf al-Mahjub"
-    author: "Abu Yaqub al-Sijistani"
-    date: "c. 970 CE"
-    language: arabic
-    genre: theology
-    branch: main
-    raw_text_path: "texts/al-sijistani.kashf_al-mahjub.ara1"
-    github_path: "texts/al-sijistani.kashf_al-mahjub.yml"
-    uri: "0330Sijistani.KashfMahjub"
-
-  - id: al_kirmani_rahat_al_aql
-    title: "Rahat al-Aql"
-    author: "Hamid al-Din al-Kirmani"
-    date: "c. 1020 CE"
-    language: arabic
-    genre: philosophy
-    branch: main
-    raw_text_path: "texts/al-kirmani.rahat_al-aql.ara1"
-    github_path: "texts/al-kirmani.rahat_al-aql.yml"
-    uri: "0411Kirmani.RahatAql"
+- id: 0286daciqarmaticabdan_shajaratyaqin_noorlib0035479_ara1
+  title: Shajarat Yaqin
+  author: 0286DaciQarmatiCabdan
+  language: ar
+  branch: master
+  raw_text_path: data/0286DaciQarmatiCabdan/0286DaciQarmatiCabdan.ShajaratYaqin.Noorlib0035479-ara1.txt
+  github_path: data/0286DaciQarmatiCabdan/0286DaciQarmatiCabdan.ShajaratYaqin/0286DaciQarmatiCabdan.ShajaratYaqin.Noorlib0035479-ara1.yml
+- id: 0322abuhatimrazi_aclamnubuwwa_noorlib0031306_ara1
+  title: Aclam Nubuwwa
+  author: 0322AbuHatimRazi
+  language: ar
+  branch: master
+  raw_text_path: data/0322AbuHatimRazi/0322AbuHatimRazi.AclamNubuwwa.Noorlib0031306-ara1.txt
+  github_path: data/0322AbuHatimRazi/0322AbuHatimRazi.AclamNubuwwa/0322AbuHatimRazi.AclamNubuwwa.Noorlib0031306-ara1.yml
+- id: 0322abuhatimrazi_islah_kraken210622021811_ara1
+  title: Islah
+  author: 0322AbuHatimRazi
+  language: ar
+  branch: master
+  raw_text_path: data/0322AbuHatimRazi/0322AbuHatimRazi.Islah.Kraken210622021811-ara1.txt
+- id: 0322abuhatimrazi_zina_kraken2106220218081_ara1
+  title: Zina
+  author: 0322AbuHatimRazi
+  language: ar
+  branch: master
+  raw_text_path: data/0322AbuHatimRazi/0322AbuHatimRazi.Zina.Kraken2106220218081-ara1.txt
+- id: 0322cabdallahmahdi_kitabasrar_aq001_ara1
+  title: Kitab Asrar
+  author: 0322CabdAllahMahdi
+  language: ar
+  branch: master
+  raw_text_path: data/0322CabdAllahMahdi/0322CabdAllahMahdi.KitabAsrar.AQ001-ara1.txt
+- id: 0346jacfarbinmansur_fataratwaqiranat_kraken230417165027_ara1
+  title: Fatarat Wa Qiranat
+  author: 0346JacfarBinMansur
+  language: ar
+  branch: master
+  raw_text_path: data/0346JacfarBinMansurYaman/0346JacfarBinMansur.FataratWaQiranat.Kraken230417165027-ara1.txt
+- id: 0346jacfarbinmansur_kitabcalimwaghulameditedmorris_kraken230417165028_ara2
+  title: Kitab Calim Wa Ghulam Edited Morris
+  author: 0346JacfarBinMansur
+  language: ar
+  branch: master
+  raw_text_path: data/0346JacfarBinMansurYaman/0346JacfarBinMansur.KitabCalimWaGhulamEditedMorris.Kraken230417165028-ara2.txt
+- id: 0346jacfarbinmansuryaman_calimwaghulam_noorlib18399bk1_ara1
+  title: Calim Wa Ghulam
+  author: 0346JacfarBinMansurYaman
+  language: ar
+  branch: master
+  raw_text_path: data/0346JacfarBinMansurYaman/0346JacfarBinMansurYaman.CalimWaGhulam.Noorlib18399BK1-ara1.txt
+  github_path: data/0346JacfarBinMansurYaman/0346JacfarBinMansurYaman.CalimWaGhulam/0346JacfarBinMansurYaman.CalimWaGhulam.Noorlib18399BK1-ara1.yml
+- id: 0346jacfarbinmansuryaman_kashf_kraken22041020274101_ara1
+  title: Kashf
+  author: 0346JacfarBinMansurYaman
+  language: ar
+  branch: master
+  raw_text_path: data/0346JacfarBinMansurYaman/0346JacfarBinMansurYaman.Kashf.Kraken22041020274101-ara1.txt
+- id: 0346jacfarbinmansuryaman_kitabkashfedstrothman_kraken220315001902_ara2
+  title: Kitab Kashf Ed Strothman
+  author: 0346JacfarBinMansurYaman
+  language: ar
+  branch: master
+  raw_text_path: data/0346JacfarBinMansurYaman/0346JacfarBinMansurYaman.KitabKashfEdStrothman.Kraken220315001902-ara2.txt
+- id: 0346jacfarbinmansuryaman_sarairwaasrar_kraken230420161214_ara1
+  title: Sarair Wa Asrar
+  author: 0346JacfarBinMansurYaman
+  language: ar
+  branch: master
+  raw_text_path: data/0346JacfarBinMansurYaman/0346JacfarBinMansurYaman.SarairWaAsrar.Kraken230420161214-ara1.txt
+- id: 0346jacfarbinmansuryaman_tawilzakat_kraken220315161331_ara1
+  title: Tawil Zakat
+  author: 0346JacfarBinMansurYaman
+  language: ar
+  branch: master
+  raw_text_path: data/0346JacfarBinMansurYaman/0346JacfarBinMansurYaman.TawilZakat.Kraken220315161331-ara1.txt
+- id: 0346jacfarbinmansuryamanridafibatin_kraken230220161224_ara1
+  title: Kraken230220161224-ara1
+  author: 0346JacfarBinMansurYamanRidaFiBatin
+  language: ar
+  branch: master
+  raw_text_path: data/0346JacfarBinMansurYaman/0346JacfarBinMansurYamanRidaFiBatin.Kraken230220161224-ara1.txt
+- id: 0361abuyacqubsijistani_iftikhar_noorlib0024469_ara1
+  title: Iftikhar
+  author: 0361AbuYacqubSijistani
+  language: ar
+  branch: master
+  raw_text_path: data/0361AbuYacqubSijistani/0361AbuYacqubSijistani.Iftikhar.Noorlib0024469-ara1.txt
+  github_path: data/0361AbuYacqubSijistani/0361AbuYacqubSijistani.Iftikhar/0361AbuYacqubSijistani.Iftikhar.Noorlib0024469-ara1.yml
+- id: 0361abuyacqubsijistani_ithbatnubuwwa_kraken210622021808_ara1
+  title: Ithbat Nubuwwa
+  author: 0361AbuYacqubSijistani
+  language: ar
+  branch: master
+  raw_text_path: data/0361AbuYacqubSijistani/0361AbuYacqubSijistani.IthbatNubuwwa.Kraken210622021808-ara1.txt
+- id: 0361abuyacqubsijistani_maqalid_kraken210622021812_ara1
+  title: Maqalid
+  author: 0361AbuYacqubSijistani
+  language: ar
+  branch: master
+  raw_text_path: data/0361AbuYacqubSijistani/0361AbuYacqubSijistani.Maqalid.Kraken210622021812-ara1.txt
+- id: 0361abuyacqubsijistani_tuhfatmustajibin_noorlib0034819bk1_ara1
+  title: Tuhfat Mustajibin
+  author: 0361AbuYacqubSijistani
+  language: ar
+  branch: master
+  raw_text_path: data/0361AbuYacqubSijistani/0361AbuYacqubSijistani.TuhfatMustajibin.Noorlib0034819BK1-ara1.txt
+  github_path: data/0361AbuYacqubSijistani/0361AbuYacqubSijistani.TuhfatMustajibin/0361AbuYacqubSijistani.TuhfatMustajibin.Noorlib0034819BK1-ara1.yml
+- id: 0361abuyacqubsijistani_yanabic_noorlib0034741_ara1
+  title: Yanabic
+  author: 0361AbuYacqubSijistani
+  language: ar
+  branch: master
+  raw_text_path: data/0361AbuYacqubSijistani/0361AbuYacqubSijistani.Yanabic.Noorlib0034741-ara1.txt
+  github_path: data/0361AbuYacqubSijistani/0361AbuYacqubSijistani.Yanabic/0361AbuYacqubSijistani.Yanabic.Noorlib0034741-ara1.yml
+- id: 0362ibnhaniandalusi_diwan_jk007572_ara1
+  title: Diwan
+  author: 0362IbnHaniAndalusi
+  language: ar
+  branch: master
+  raw_text_path: data/0362IbnHaniAndalusi/0362IbnHaniAndalusi.Diwan.JK007572-ara1.txt
+- id: 0363qadinucman_ajwiba_kraken220719160236_ara1
+  title: Ajwiba
+  author: 0363QadiNucman
+  language: ar
+  branch: master
+  raw_text_path: data/0363QadiNucman/0363QadiNucman.Ajwiba.Kraken220719160236-ara1.txt
+- id: 0363qadinucman_dacaimislam_shia001131vols_ara1
+  title: Dacaim Islam
+  author: 0363QadiNucman
+  language: ar
+  branch: master
+  raw_text_path: data/0363QadiNucman/0363QadiNucman.DacaimIslam.Shia001131Vols-ara1.txt
+- id: 0363qadinucman_dhatbayan_kraken230417165028_ara1
+  title: Dhat Bayan
+  author: 0363QadiNucman
+  language: ar
+  branch: master
+  raw_text_path: data/0363QadiNucman/0363QadiNucman.DhatBayan.Kraken230417165028-ara1.txt
+- id: 0363qadinucman_idah_eshia0027411_ara1
+  title: Idah
+  author: 0363QadiNucman
+  language: ar
+  branch: master
+  raw_text_path: data/0363QadiNucman/0363QadiNucman.Idah.EShia0027411-ara1.txt
+- id: 0363qadinucman_ikhtilafusulmadhahib_escr20110913_ara1
+  title: Ikhtilaf Usul Madhahib
+  author: 0363QadiNucman
+  language: ar
+  branch: master
+  raw_text_path: data/0363QadiNucman/0363QadiNucman.IkhtilafUsulMadhahib.EScr20110913-ara1.txt
+- id: 0363qadinucman_kitabhimma_kraken220228162440_ara1
+  title: Kitab Himma
+  author: 0363QadiNucman
+  language: ar
+  branch: master
+  raw_text_path: data/0363QadiNucman/0363QadiNucman.KitabHimma.Kraken220228162440-ara1.txt
+- id: 0363qadinucman_mukhtasarathar_kraken221221164112_ara1
+  title: Mukhtasar Athar
+  author: 0363QadiNucman
+  language: ar
+  branch: master
+  raw_text_path: data/0363QadiNucman/0363QadiNucman.MukhtasarAthar.Kraken221221164112-ara1.txt
+- id: 0363qadinucman_sharhakhbar_shia001278vols_ara1
+  title: Sharh Akhbar
+  author: 0363QadiNucman
+  language: ar
+  branch: master
+  raw_text_path: data/0363QadiNucman/0363QadiNucman.SharhAkhbar.Shia001278Vols-ara1.txt
+- id: 0363qadinucman_tawhid_kraken230417165028_ara1
+  title: Tawhid
+  author: 0363QadiNucman
+  language: ar
+  branch: master
+  raw_text_path: data/0363QadiNucman/0363QadiNucman.Tawhid.Kraken230417165028-ara1.txt
+- id: 0363qadinucman_tawildacaim_eshia0071536_ara1
+  title: Tawil Dacaim
+  author: 0363QadiNucman
+  language: ar
+  branch: master
+  raw_text_path: data/0363QadiNucman/0363QadiNucman.TawilDacaim.EShia0071536-ara1.txt
+- id: 0363qadinuman_risalamudhhiba_kraken230417165028_ara1
+  title: Risala Mudhhiba
+  author: 0363QadiNuman
+  language: ar
+  branch: master
+  raw_text_path: data/0363QadiNucman/0363QadiNuman.RisalaMudhhiba.Kraken230417165028-ara1.txt
+- id: 0365mansurjawdhari_siratustadhjawdhar_kraken230417165029_ara1
+  title: Sirat Ustadh Jawdhar
+  author: 0365MansurJawdhari
+  language: ar
+  branch: master
+  raw_text_path: data/0365MansurJawdhari/0365MansurJawdhari.SiratUstadhJawdhar.Kraken230417165029-ara1.txt
+- id: 0375ikhwansafa_jamicatjamica_gvdb20200108_ara1
+  title: Jamicat Jamica
+  author: 0375IkhwanSafa
+  language: ar
+  branch: master
+  raw_text_path: data/0375IkhwanSafa/0375IkhwanSafa.JamicatJamica.GVDB20200108-ara1.txt
+- id: 0375ikhwansafa_mujmalhikma_noorlib17169_per1
+  title: Mujmal Hikma
+  author: 0375IkhwanSafa
+  language: fa
+  branch: master
+  raw_text_path: data/0375IkhwanSafa/0375IkhwanSafa.MujmalHikma.Noorlib17169-per1.txt
+- id: 0375ikhwansafa_qawlcalasirrmakhzun_gvdb20210802_ara1
+  title: Qawl Cala Sirr Makhzun
+  author: 0375IkhwanSafa
+  language: ar
+  branch: master
+  raw_text_path: data/0375IkhwanSafa/0375IkhwanSafa.QawlCalaSirrMakhzun.GVDB20210802-ara1.txt
+- id: 0375ikhwansafa_rasail_hindawi095926405vols_ara1
+  title: Rasail
+  author: 0375IkhwanSafa
+  language: ar
+  branch: master
+  raw_text_path: data/0375IkhwanSafa/0375IkhwanSafa.Rasail.Hindawi095926405Vols-ara1.txt
+- id: 0375ikhwansafa_risalatjamica_kraken220610012301_ara1
+  title: Risalat Jamica
+  author: 0375IkhwanSafa
+  language: ar
+  branch: master
+  raw_text_path: data/0375IkhwanSafa/0375IkhwanSafa.RisalatJamica.Kraken220610012301-ara1.txt
+- id: 0386ahmadibnibrahimnaysaburi_ithbatimama_noorlib0024484_ara1
+  title: Ithbat Imama
+  author: 0386AhmadIbnIbrahimNaysaburi
+  language: ar
+  branch: master
+  raw_text_path: data/0386AhmadIbnIbrahimNaysaburi/0386AhmadIbnIbrahimNaysaburi.IthbatImama.Noorlib0024484-ara1.txt
+  github_path: data/0386AhmadIbnIbrahimNaysaburi/0386AhmadIbnIbrahimNaysaburi.IthbatImama/0386AhmadIbnIbrahimNaysaburi.IthbatImama.Noorlib0024484-ara1.yml
+- id: 0411abufawarisrisalafiimama_kraken230220161224_ara1
+  title: Kraken230220161224-ara1
+  author: 0411AbuFawarisRisalaFiImama
+  language: ar
+  branch: master
+  raw_text_path: data/0411AbuFawaris/0411AbuFawarisRisalaFiImama.Kraken230220161224-ara1.txt
+- id: 0411hamiddinkirmani_aqwaldhahabiyya_noorlib0024481_ara1
+  title: Aqwal Dhahabiyya
+  author: 0411HamidDinKirmani
+  language: ar
+  branch: master
+  raw_text_path: data/0411HamidDinKirmani/0411HamidDinKirmani.AqwalDhahabiyya.Noorlib0024481-ara1.txt
+  github_path: data/0411HamidDinKirmani/0411HamidDinKirmani.AqwalDhahabiyya/0411HamidDinKirmani.AqwalDhahabiyya.Noorlib0024481-ara1.yml
+- id: 0411hamiddinkirmani_majmucatrasail_noorlib0019305_ara1
+  title: Majmucat Rasail
+  author: 0411HamidDinKirmani
+  language: ar
+  branch: master
+  raw_text_path: data/0411HamidDinKirmani/0411HamidDinKirmani.MajmucatRasail.Noorlib0019305-ara1.txt
+  github_path: data/0411HamidDinKirmani/0411HamidDinKirmani.MajmucatRasail/0411HamidDinKirmani.MajmucatRasail.Noorlib0019305-ara1.yml
+- id: 0411hamiddinkirmani_masabihfiithbat_shia003686_ara1
+  title: Masabih Fi Ithbat
+  author: 0411HamidDinKirmani
+  language: ar
+  branch: master
+  raw_text_path: data/0411HamidDinKirmani/0411HamidDinKirmani.MasabihFiIthbat.Shia003686-ara1.txt
+- id: 0411hamiddinkirmani_rahatcaql_noorlib0023925_ara1
+  title: Rahat Caql
+  author: 0411HamidDinKirmani
+  language: ar
+  branch: master
+  raw_text_path: data/0411HamidDinKirmani/0411HamidDinKirmani.RahatCaql.Noorlib0023925-ara1.txt
+  github_path: data/0411HamidDinKirmani/0411HamidDinKirmani.RahatCaql/0411HamidDinKirmani.RahatCaql.Noorlib0023925-ara1.yml
+- id: 0411hamiddinkirmani_riyad_kraken2108160843551_ara1
+  title: Riyad
+  author: 0411HamidDinKirmani
+  language: ar
+  branch: master
+  raw_text_path: data/0411HamidDinKirmani/0411HamidDinKirmani.Riyad.Kraken2108160843551-ara1.txt
+- id: 0450maliji_majalismustansiriyya_escr_aq
+  title: Majalis Mustansiriyya
+  author: 0450Maliji
+  language: ar
+  branch: master
+  raw_text_path: data/0450Maliji/0450Maliji.MajalisMustansiriyya.EScr-AQ.txt
+- id: 0470muayyadfidinshirazi_diwan_kraken210904174302_ara1
+  title: Diwan
+  author: 0470MuayyadFiDinShirazi
+  language: ar
+  branch: master
+  raw_text_path: data/0470MuayyadFiDinShirazi/0470MuayyadFiDinShirazi.Diwan.Kraken210904174302-ara1.txt
+- id: 0470muayyadfidinshirazi_majalis_kraken210904174303_ara1
+  title: Majalis
+  author: 0470MuayyadFiDinShirazi
+  language: ar
+  branch: master
+  raw_text_path: data/0470MuayyadFiDinShirazi/0470MuayyadFiDinShirazi.Majalis.Kraken210904174303-ara1.txt
+- id: 0470muayyadfidinshirazi_majalis04_escr202402021825
+  title: Majalis04
+  author: 0470MuayyadFiDinShirazi
+  language: ar
+  branch: master
+  raw_text_path: data/0470MuayyadFiDinShirazi/0470MuayyadFiDinShirazi.Majalis04.EScr202402021825.txt
+- id: 0470muayyadfidinshirazi_majalismuayyadiyya_noorlib0017761vols_ara1
+  title: Majalis Muayyadiyya
+  author: 0470MuayyadFiDinShirazi
+  language: ar
+  branch: master
+  raw_text_path: data/0470MuayyadFiDinShirazi/0470MuayyadFiDinShirazi.MajalisMuayyadiyya.Noorlib0017761Vols-ara1.txt
+  github_path: data/0470MuayyadFiDinShirazi/0470MuayyadFiDinShirazi.MajalisMuayyadiyya/0470MuayyadFiDinShirazi.MajalisMuayyadiyya.Noorlib0017761Vols-ara1.yml
+- id: 0470muayyadfidinshirazi_risalatduhat_noorlib0034819bk3_ara1
+  title: Risalat Duhat
+  author: 0470MuayyadFiDinShirazi
+  language: ar
+  branch: master
+  raw_text_path: data/0470MuayyadFiDinShirazi/0470MuayyadFiDinShirazi.RisalatDuhat.Noorlib0034819BK3-ara1.txt
+  github_path: data/0470MuayyadFiDinShirazi/0470MuayyadFiDinShirazi.RisalatDuhat/0470MuayyadFiDinShirazi.RisalatDuhat.Noorlib0034819BK3-ara1.yml
+- id: 0470muayyadfidinshirazi_sira_kraken210615213257_ara1
+  title: Sira
+  author: 0470MuayyadFiDinShirazi
+  language: ar
+  branch: master
+  raw_text_path: data/0470MuayyadFiDinShirazi/0470MuayyadFiDinShirazi.Sira.Kraken210615213257-ara1.txt
+- id: 0481nasirkhusraw_diwan_noorlib_per1
+  title: Diwan
+  author: 0481NasirKhusraw
+  language: fa
+  branch: master
+  raw_text_path: data/0481NasirKhusraw/0481NasirKhusraw.Diwan.Noorlib-per1.txt
+- id: 0481nasirkhusraw_jamichikmatayn_noorlib_per1
+  title: Jamic Hikmatayn
+  author: 0481NasirKhusraw
+  language: fa
+  branch: master
+  raw_text_path: data/0481NasirKhusraw/0481NasirKhusraw.JamicHikmatayn.Noorlib-per1.txt
+- id: 0481nasirkhusraw_khwanikhwan_aq
+  title: Khwan Ikhwan
+  author: 0481NasirKhusraw
+  language: ar
+  branch: master
+  raw_text_path: data/0481NasirKhusraw/0481NasirKhusraw.KhwanIkhwan.AQ.txt
+- id: 0481nasirkhusraw_safarnama_ganjoor_per1
+  title: Safarnama
+  author: 0481NasirKhusraw
+  language: fa
+  branch: master
+  raw_text_path: data/0481NasirKhusraw/0481NasirKhusraw.Safarnama.Ganjoor-per1.txt
+- id: 0523anonymous_hidayatamiriyya_kraken220323022415_ara1
+  title: Hidayat Amiriyya
+  author: 0523Anonymous
+  language: ar
+  branch: master
+  raw_text_path: data/0523Anonymous/0523Anonymous.HidayatAmiriyya.Kraken220323022415-ara1.txt
+- id: 0548shahrastani_mafatihasrar_kraken210622021806_ara1
+  title: Mafatih Asrar
+  author: 0548Shahrastani
+  language: ar
+  branch: master
+  raw_text_path: data/0548Shahrastani/0548Shahrastani.MafatihAsrar.Kraken210622021806-ara1.txt
+- id: 0548shahrastani_milalwanihal_shamela0011812_ara1
+  title: Milal Wa Nihal
+  author: 0548Shahrastani
+  language: ar
+  branch: master
+  raw_text_path: data/0548Shahrastani/0548Shahrastani.MilalWaNihal.Shamela0011812-ara1.txt
+- id: 0548shahrastani_musaracatfalasifa_noorlib0011643_ara1
+  title: Musaracat Falasifa
+  author: 0548Shahrastani
+  language: ar
+  branch: master
+  raw_text_path: data/0548Shahrastani/0548Shahrastani.MusaracatFalasifa.Noorlib0011643-ara1.txt
+  github_path: data/0548Shahrastani/0548Shahrastani.MusaracatFalasifa/0548Shahrastani.MusaracatFalasifa.Noorlib0011643-ara1.yml
+- id: 0548shahrastani_nihayataqdam_noorlib0004971_ara2
+  title: Nihayat Aqdam
+  author: 0548Shahrastani
+  language: ar
+  branch: master
+  raw_text_path: data/0548Shahrastani/0548Shahrastani.NihayatAqdam.Noorlib0004971-ara2.txt
+  github_path: data/0548Shahrastani/0548Shahrastani.NihayatAqdam/0548Shahrastani.NihayatAqdam.Noorlib0004971-ara2.yml
+- id: 0557ibrahimbinhusaynhamidi_kanzwalad_noorlib0010827_ara1
+  title: Kanz Walad
+  author: 0557IbrahimBinHusaynHamidi
+  language: ar
+  branch: master
+  raw_text_path: data/0557IbrahimBinHusaynHamidi/0557IbrahimBinHusaynHamidi.KanzWalad.Noorlib0010827-ara1.txt
+  github_path: data/0557IbrahimBinHusaynHamidi/0557IbrahimBinHusaynHamidi.KanzWalad/0557IbrahimBinHusaynHamidi.KanzWalad.Noorlib0010827-ara1.yml
+- id: 0612caliibnwalidyamani_damighbatil_noorlib0005343_ara1
+  title: Damigh Batil
+  author: 0612CaliIbnWalidYamani
+  language: ar
+  branch: master
+  raw_text_path: data/0612CaliIbnWalidYamani/0612CaliIbnWalidYamani.DamighBatil.Noorlib0005343-ara1.txt
+  github_path: data/0612CaliIbnWalidYamani/0612CaliIbnWalidYamani.DamighBatil/0612CaliIbnWalidYamani.DamighBatil.Noorlib0005343-ara1.yml
+- id: 0612caliibnwalidyamani_kitabzakhira_noorlib0010605_ara1
+  title: Kitab Zakhira
+  author: 0612CaliIbnWalidYamani
+  language: ar
+  branch: master
+  raw_text_path: data/0612CaliIbnWalidYamani/0612CaliIbnWalidYamani.KitabZakhira.Noorlib0010605-ara1.txt
+  github_path: data/0612CaliIbnWalidYamani/0612CaliIbnWalidYamani.KitabZakhira/0612CaliIbnWalidYamani.KitabZakhira.Noorlib0010605-ara1.yml
+- id: 0612caliibnwalidyamani_tajcaqaid_noorlib0010712_ara1
+  title: Taj Caqaid
+  author: 0612CaliIbnWalidYamani
+  language: ar
+  branch: master
+  raw_text_path: data/0612CaliIbnWalidYamani/0612CaliIbnWalidYamani.TajCaqaid.Noorlib0010712-ara1.txt
+  github_path: data/0612CaliIbnWalidYamani/0612CaliIbnWalidYamani.TajCaqaid/0612CaliIbnWalidYamani.TajCaqaid.Noorlib0010712-ara1.yml
+- id: 0626ibnhanzalawadici_diyahulum_noorlib18399bk2_ara1
+  title: Diya Hulum
+  author: 0626IbnHanzalaWadici
+  language: ar
+  branch: master
+  raw_text_path: data/0626IbnHanzalaWadici/0626IbnHanzalaWadici.DiyaHulum.Noorlib18399BK2-ara1.txt
+  github_path: data/0626IbnHanzalaWadici/0626IbnHanzalaWadici.DiyaHulum/0626IbnHanzalaWadici.DiyaHulum.Noorlib18399BK2-ara1.yml
+- id: 0658hasanmucaddil_macrifatnafs_noorlib18399bk3_ara1
+  title: Macrifat Nafs
+  author: 0658HasanMucaddil
+  language: ar
+  branch: master
+  raw_text_path: data/0658HasanMucaddil/0658HasanMucaddil.MacrifatNafs.Noorlib18399BK3-ara1.txt
+  github_path: data/0658HasanMucaddil/0658HasanMucaddil.MacrifatNafs/0658HasanMucaddil.MacrifatNafs.yml
+- id: 0658hasanmucaddil_mubtadacawalim_noorlib18399bk4_ara1
+  title: Mubtada Cawalim
+  author: 0658HasanMucaddil
+  language: ar
+  branch: master
+  raw_text_path: data/0658HasanMucaddil/0658HasanMucaddil.MubtadaCawalim.Noorlib18399BK4-ara1.txt
+  github_path: data/0658HasanMucaddil/0658HasanMucaddil.MubtadaCawalim/0658HasanMucaddil.MubtadaCawalim.yml
+- id: 0672nasirdintusi_aghazwaanjam_aq_per1
+  title: Aghaz Wa Anjam
+  author: 0672NasirDinTusi
+  language: fa
+  branch: master
+  raw_text_path: data/0672NasirDinTusi/0672NasirDinTusi.AghazWaAnjam.AQ-per1.txt
+- id: 0672nasirdintusi_awsafashraf_aq_per1
+  title: Awsaf Ashraf
+  author: 0672NasirDinTusi
+  language: fa
+  branch: master
+  raw_text_path: data/0672NasirDinTusi/0672NasirDinTusi.AwsafAshraf.AQ-per1.txt
+- id: 0672nasirdintusi_jawahirfaraid_masaha001043_ara1
+  title: Jawahir Faraid
+  author: 0672NasirDinTusi
+  language: ar
+  branch: master
+  raw_text_path: data/0672NasirDinTusi/0672NasirDinTusi.JawahirFaraid.Masaha001043-ara1.txt
+- id: 0672nasirdintusi_musaricmusaric_noorlib0011644_ara1
+  title: Musaric Musaric
+  author: 0672NasirDinTusi
+  language: ar
+  branch: master
+  raw_text_path: data/0672NasirDinTusi/0672NasirDinTusi.MusaricMusaric.Noorlib0011644-ara1.txt
+  github_path: data/0672NasirDinTusi/0672NasirDinTusi.MusaricMusaric/0672NasirDinTusi.MusaricMusaric.Noorlib0011644-ara1.yml
+- id: 0672nasirdintusi_rawzataslim_aq_per1
+  title: Rawza Taslim
+  author: 0672NasirDinTusi
+  language: fa
+  branch: master
+  raw_text_path: data/0672NasirDinTusi/0672NasirDinTusi.RawzaTaslim.AQ-per1.txt
+- id: 0672nasirdintusi_tafsirisharat_shamela0006534bk2_ara1
+  title: Tafsir Isharat
+  author: 0672NasirDinTusi
+  language: ar
+  branch: master
+  raw_text_path: data/0672NasirDinTusi/0672NasirDinTusi.TafsirIsharat.Shamela0006534BK2-ara1.txt
+- id: 0672nasirdintusi_tahrirmajisti_pal071701068_ara1
+  title: Tahrir Majisti
+  author: 0672NasirDinTusi
+  language: ar
+  branch: master
+  raw_text_path: data/0672NasirDinTusi/0672NasirDinTusi.TahrirMajisti.PAL071701068-ara1.txt
+- id: 0672nasirdintusi_tajridmantiq_jk010709_ara1
+  title: Tajrid Mantiq
+  author: 0672NasirDinTusi
+  language: ar
+  branch: master
+  raw_text_path: data/0672NasirDinTusi/0672NasirDinTusi.TajridMantiq.JK010709-ara1.txt
+- id: 0672nasirdintusi_usturlab_aq_per1
+  title: Usturlab
+  author: 0672NasirDinTusi
+  language: fa
+  branch: master
+  raw_text_path: data/0672NasirDinTusi/0672NasirDinTusi.Usturlab.AQ-per1.txt
+- id: 0721nizariquhistani_dasturnama_ganjoor_per1
+  title: Dasturnama
+  author: 0721NizariQuhistani
+  language: fa
+  branch: master
+  raw_text_path: data/0721NizariQuhistani/0721NizariQuhistani.Dasturnama.Ganjoor-per1.txt
+- id: 0721nizariquhistani_safarnama_ganjoor_per1
+  title: Safarnama
+  author: 0721NizariQuhistani
+  language: fa
+  branch: master
+  raw_text_path: data/0721NizariQuhistani/0721NizariQuhistani.Safarnama.Ganjoor-per1.txt
+- id: 0854muhammadbinsacdrafna_risalatkafiyya_noorlib0034819bk2_ara1
+  title: Risalat Kafiyya
+  author: 0854MuhammadBinSacdRafna
+  language: ar
+  branch: master
+  raw_text_path: data/0854MuhammadBinSacdRafna/0854MuhammadBinSacdRafna.RisalatKafiyya.Noorlib0034819BK2-ara1.txt
+- id: 0872idriscimaddin_cuyunakhbar_noorlib0007954vols_ara1
+  title: Cuyun Akhbar
+  author: 0872IdrisCimadDin
+  language: ar
+  branch: master
+  raw_text_path: data/0872IdrisCimadDin/0872IdrisCimadDin.CuyunAkhbar.Noorlib0007954Vols-ara1.txt
+  github_path: data/0872IdrisCimadDin/0872IdrisCimadDin.CuyunAkhbar/0872IdrisCimadDin.CuyunAkhbar.Noorlib0007954Vols-ara1.yml
+- id: 0872idriscimaddin_cuyunakhbar_noorlib0019441_ara2
+  title: Cuyun Akhbar
+  author: 0872IdrisCimadDin
+  language: ar
+  branch: master
+  raw_text_path: data/0872IdrisCimadDin/0872IdrisCimadDin.CuyunAkhbar.Noorlib0019441-ara2.txt
+  github_path: data/0872IdrisCimadDin/0872IdrisCimadDin.CuyunAkhbar/0872IdrisCimadDin.CuyunAkhbar.Noorlib0019441-ara2.yml
+- id: 0872idriscimaddin_zahrmacani_noorlib0023588_ara1
+  title: Zahr Macani
+  author: 0872IdrisCimadDin
+  language: ar
+  branch: master
+  raw_text_path: data/0872IdrisCimadDin/0872IdrisCimadDin.ZahrMacani.Noorlib0023588-ara1.txt
+  github_path: data/0872IdrisCimadDin/0872IdrisCimadDin.ZahrMacani/0872IdrisCimadDin.ZahrMacani.Noorlib0023588-ara1.yml
+- id: 0883shihabdinbinnasrdaci_kitabidah_noorlib0010584_ara1
+  title: Kitab Idah
+  author: 0883ShihabDinBinNasrDaci
+  language: ar
+  branch: master
+  raw_text_path: data/0883ShihabDinBinNasrDaci/0883ShihabDinBinNasrDaci.KitabIdah.Noorlib0010584-ara1.txt
+  github_path: data/0883ShihabDinBinNasrDaci/0883ShihabDinBinNasrDaci.KitabIdah/0883ShihabDinBinNasrDaci.KitabIdah.Noorlib0010584-ara1.yml
