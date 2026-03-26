@@ -1,86 +1,95 @@
 /**
  * Alamut Library — Cloudflare Worker API Proxy
  *
- * This Worker proxies requests from the GitHub Pages frontend to the Anthropic API.
- * The API key can be stored as a Cloudflare secret OR passed in the request header.
+ * DEPLOY:
+ *   wrangler deploy
+ *   wrangler secret put ANTHROPIC_API_KEY
  *
- * DEPLOY STEPS:
- *   1.  npm install -g wrangler
- *   2.  wrangler login
- *   3.  wrangler deploy
- *   4.  wrangler secret put ANTHROPIC_API_KEY   ← paste your sk-ant-… key
- *   5.  Copy your Worker URL (e.g. https://alamut-proxy.YOUR_ACCOUNT.workers.dev)
- *   6.  In index.html set:  const WORKER_URL = 'https://alamut-proxy.YOUR_ACCOUNT.workers.dev';
- *   7.  Commit + push → GitHub Pages auto-deploys
+ * Set WORKER_URL in index.html to just the base URL, e.g.:
+ *   const WORKER_URL = 'https://alamut-proxy.YOUR_ACCOUNT.workers.dev';
+ *   (do NOT add /v1/messages to this URL — the app adds the path automatically)
  *
- * TEST YOUR WORKER (before connecting the frontend):
+ * TEST:
  *   curl -X POST https://alamut-proxy.YOUR_ACCOUNT.workers.dev/v1/messages \
  *     -H "Content-Type: application/json" \
- *     -d '{"model":"claude-sonnet-4-20250514","max_tokens":50,"messages":[{"role":"user","content":"Say hello"}]}'
+ *     -d '{"model":"claude-sonnet-4-20250514","max_tokens":50,"messages":[{"role":"user","content":"Say: Worker connected."}]}'
  */
 
 export default {
   async fetch(request, env) {
 
     // ── CORS ──────────────────────────────────────────────────────────────────
-    // Add your GitHub Pages URL here.  The wildcard fallback is safe because
-    // the API key stays server-side regardless.
     const ALLOWED_ORIGINS = [
       'https://alamutlibrary.github.io',
       'http://localhost:3000',
       'http://localhost:5500',
       'http://127.0.0.1:5500',
       'http://localhost:8080',
-      'null',           // file:// opened locally shows Origin: null
+      'null', // file:// opened locally
     ];
 
     const origin = request.headers.get('Origin') || '';
+    // Allow any origin in ALLOWED_ORIGINS, otherwise fall back to first entry
     const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
 
     const corsHeaders = {
       'Access-Control-Allow-Origin':  allowedOrigin,
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, X-API-Key',
       'Access-Control-Max-Age':       '86400',
     };
 
-    // Handle preflight
+    // ── PREFLIGHT ─────────────────────────────────────────────────────────────
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: corsHeaders });
+    }
+
+    // ── HEALTH CHECK (GET /) ──────────────────────────────────────────────────
+    // Lets you verify the worker is alive by visiting its URL in a browser
+    if (request.method === 'GET') {
+      return new Response(JSON.stringify({ status: 'Alamut Library Worker is running' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     if (request.method !== 'POST') {
       return new Response('Method not allowed', { status: 405, headers: corsHeaders });
     }
 
-    // ── RESOLVE API KEY ───────────────────────────────────────────────────────
-    // Priority: Cloudflare secret > X-API-Key header from request
-    const apiKey = env.ANTHROPIC_API_KEY || request.headers.get('X-API-Key') || '';
+    // ── API KEY ───────────────────────────────────────────────────────────────
+    // Uses Cloudflare secret (set via `wrangler secret put ANTHROPIC_API_KEY`)
+    // Falls back to key passed in X-API-Key header from the browser sidebar input
+    const apiKey = (env.ANTHROPIC_API_KEY || '').trim() ||
+                   (request.headers.get('X-API-Key') || '').trim();
+
     if (!apiKey) {
       return new Response(
-        JSON.stringify({ error: { message: 'No API key configured. Set ANTHROPIC_API_KEY as a Cloudflare secret.' } }),
+        JSON.stringify({ error: { message: 'No API key. Run: wrangler secret put ANTHROPIC_API_KEY' } }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // ── PARSE & VALIDATE BODY ─────────────────────────────────────────────────
+    // ── PARSE BODY ────────────────────────────────────────────────────────────
     let body;
-    try { body = await request.json(); }
-    catch(e) {
+    try {
+      body = await request.json();
+    } catch(e) {
       return new Response(
-        JSON.stringify({ error: { message: 'Invalid JSON body' } }),
+        JSON.stringify({ error: { message: 'Invalid JSON body: ' + e.message } }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    // Basic validation
     if (!body.model || !String(body.model).startsWith('claude-')) {
       return new Response(
-        JSON.stringify({ error: { message: 'Invalid or missing model. Must start with "claude-".' } }),
+        JSON.stringify({ error: { message: 'Missing or invalid model field.' } }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Cap tokens to prevent runaway costs
+    // Safety cap on tokens
     body.max_tokens = Math.min(body.max_tokens || 1000, 4000);
 
     // ── PROXY TO ANTHROPIC ────────────────────────────────────────────────────
@@ -104,7 +113,7 @@ export default {
 
     } catch(err) {
       return new Response(
-        JSON.stringify({ error: { message: 'Worker fetch error: ' + err.message } }),
+        JSON.stringify({ error: { message: 'Proxy error: ' + err.message } }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
