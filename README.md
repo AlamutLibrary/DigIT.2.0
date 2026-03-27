@@ -1,10 +1,10 @@
-# Digital Ismaili Texts v.1.0
+# Digital Ismaili Texts v.2.0
 
 ## Introduction
 
-DigIT.1.0 is a bilingual corpus of Arabic and Persian texts, which will form the basis of a larger multilingual corpus of Ismaili texts.
+DigIT.2.0 is the second iteration of the bilingual corpus of Arabic and Persian texts, which will form the basis of a larger multilingual corpus of Ismaili texts. The corpus can be accessed and interacted with through the Alamut Library, a web application with search and AI chat functions.
 
-The corpus is created and maintained by Aslisho Qurboniev, a researcher at the Institute of Ismaili Studies. The texts come from a variety of sources, such as from the OpenITI, but many will be digitised for the first time, including from manuscripts. The corpus follows the OpenITI standards and draws upon the tools created by the KITAB team. It is hoped that this corpus will become a useful research tool for students of Ismaili history and thought.
+The corpus is created and maintained by Aslisho Qurboniev, a researcher at the Institute of Ismaili Studies. The texts come from a variety of sources, such as from the OpenITI, but many will be digitised for the first time, including from manuscripts. The corpus follows the OpenITI standards and draws upon the tools created by the OpenITI and KITAB team. It is hoped that this corpus will become a useful research tool for students of Ismaili history and thought.
 
  The Corpus is still being developed, and new texts will be added as they become available. Your contribution will be welcome. 
 
@@ -14,7 +14,7 @@ The corpus is created and maintained by Aslisho Qurboniev, a researcher at the I
 
 The corpus contains texts in plain [mARkdown](https://kitab-project.org/corpus/markdown) format, organised into folders by author. Currently all texts by one author are in one folder, but later one each work will be nested in its own folder along with its metadata files, following OpenITI conventions. Further details can be found on the KITAB website (Documentation). For corpus approach to Islamicate texts peioneered by Maxim Romanov and the KITAB team, see the KITAB project and OpenITI website.
 
-### How to use the DigIT.1.0 corpus
+### How to use the DigIT.2.0 corpus
 
 The textual files are in plain text format, so if you can read them in a text editor, you can use them. If you want to work with them in a more productive way, you can download the files and work with them in a text editor such as Kate Editor or EditPadPro.
 
