@@ -767,7 +767,7 @@ function renderBooks() {
 
 function updateChatHeader() {
   const icon=document.getElementById('chat-header-icon'), title=document.getElementById('chat-header-title'), meta=document.getElementById('chat-header-meta');
-  if (activeScope==='all') { icon.textContent='📚'; title.textContent='Entire Library'; meta.textContent=books.length?`${books.length} text${books.length>1?'s':''} · All languages`:'No texts loaded'; }
+  if (activeScope==='all') { icon.textContent='📚'; title.textContent='Entire Library'; meta.textContent=books.length?`${books.length} text${books.length>1?'s':''} loaded · AI searches across all`:'No texts loaded'; }
   else { const b=books[activeScope]; icon.textContent='📜'; title.textContent=b.title; meta.textContent=[b.author,b.date,b.lang?.toUpperCase(),b.uri].filter(Boolean).join(' · '); }
 }
 
@@ -1164,23 +1164,109 @@ async function callClaudeWithRetry(userText, context, attempt=1) {
 function useChip(el) { if(!books.length)return; document.getElementById('chat-input').value=el.textContent; sendMessage(); }
 
 function buildContext(query) {
-  const target=activeScope==='all'?books:[books[activeScope]];
-  if (chatMode==='full') {
-    let ctx='';
-    for (const b of target) { const h=`=== ${b.title}${b.author?' | '+b.author:''}${b.date?' | '+b.date:''} ===\n`,rem=100000-ctx.length-h.length; if(rem<=0)break; ctx+=h+b.content.slice(0,rem)+'\n\n'; }
+  // Single text + Full mode: send as much of the text as possible
+  if (activeScope !== 'all') {
+    const b = books[activeScope];
+    if (chatMode === 'full') {
+      return '=== ' + b.title + (b.author ? ' | ' + b.author : '') + ' ===\n' + b.content.slice(0, 100000);
+    }
+    const kw = extractKeywords(query);
+    const passages = findRelevantPassages(b.content, kw, 6, 800);
+    let ctx = '=== ' + b.title + (b.author ? ' | ' + b.author : '') + ' ===\n';
+    passages.forEach(function(p, i){ ctx += '[Passage ' + (i+1) + ']\n' + p + '\n\n'; });
     return ctx;
   }
-  const kw=extractKeywords(query); let ctx='';
-  for (const b of target) { const p=findRelevantPassages(b.content,kw,4,600); if(!p.length)continue; ctx+=`=== ${b.title}${b.author?' | '+b.author:''} ===\n`; p.forEach((p,i)=>ctx+=`[Passage ${i+1}]\n${p}\n\n`); }
-  return ctx||target.map(b=>b.content.slice(0,3000)).join('\n\n');
+
+  // ── ENTIRE LIBRARY MODE: cross-corpus RAG ──
+  // Step 1: score every paragraph in every book against the query
+  const kw = extractKeywords(query);
+
+  // For Arabic/Persian queries, also use the raw query words as patterns
+  const queryWords = query.trim().split(/\s+/).filter(function(w){ return w.length > 1; });
+  const allPatterns = kw.concat(queryWords);
+
+  if (!allPatterns.length) {
+    // No keywords — return opening of first few books
+    return books.slice(0, 5).map(function(b){
+      return '=== ' + b.title + ' ===\n' + b.content.slice(0, 1500);
+    }).join('\n\n');
+  }
+
+  // Score paragraphs across all books
+  const scored = [];
+  books.forEach(function(b, bookIdx) {
+    if (!b.content) return;
+    // Split into paragraphs (double newline or # markers in OpenITI)
+    const paras = b.content.split(/\n(?:#|~~|\n)/).map(function(p){ return p.trim(); }).filter(function(p){ return p.length > 30; });
+    paras.forEach(function(para) {
+      let score = 0;
+      allPatterns.forEach(function(kw) {
+        try {
+          const re = new RegExp(kw, 'gi');
+          const hits = (para.match(re) || []).length;
+          score += hits * (kw.length > 3 ? 2 : 1); // longer keywords score higher
+        } catch(e) {}
+      });
+      if (score > 0) {
+        scored.push({ bookIdx: bookIdx, title: b.title, author: b.author, para: para, score: score });
+      }
+    });
+  });
+
+  // Step 2: sort by score, deduplicate by book (max 3 passages per book)
+  scored.sort(function(a, b){ return b.score - a.score; });
+
+  const bookCounts = {};
+  const selected = [];
+  const MAX_PASSAGES = 18;
+  const MAX_PER_BOOK = 3;
+
+  for (let i = 0; i < scored.length && selected.length < MAX_PASSAGES; i++) {
+    const item = scored[i];
+    bookCounts[item.bookIdx] = (bookCounts[item.bookIdx] || 0);
+    if (bookCounts[item.bookIdx] < MAX_PER_BOOK) {
+      selected.push(item);
+      bookCounts[item.bookIdx]++;
+    }
+  }
+
+  // Step 3: group by book and build context string
+  if (!selected.length) {
+    // Nothing matched — return openings of first 5 books
+    return books.slice(0, 5).map(function(b){
+      return '=== ' + b.title + (b.author ? ' | ' + b.author : '') + ' ===\n' + b.content.slice(0, 1000);
+    }).join('\n\n');
+  }
+
+  // Group passages by book
+  const byBook = {};
+  selected.forEach(function(item) {
+    if (!byBook[item.bookIdx]) byBook[item.bookIdx] = { title: item.title, author: item.author, passages: [] };
+    byBook[item.bookIdx].passages.push(item.para.slice(0, 600));
+  });
+
+  let ctx = '';
+  Object.keys(byBook).forEach(function(idx) {
+    const bk = byBook[idx];
+    ctx += '=== ' + bk.title + (bk.author ? ' | ' + bk.author : '') + ' ===\n';
+    bk.passages.forEach(function(p, i){ ctx += '[Passage ' + (i+1) + ']\n' + p + '\n\n'; });
+  });
+
+  // Cap total context at ~120k chars
+  return ctx.slice(0, 120000);
 }
-function extractKeywords(q) { const stop=new Set(['what','are','the','is','a','an','of','in','to','and','or','for','with','about','how','who','when','where','why','this','that','these','those','it','its','on','at','by','from','as','be','was','were','been','have','has','had','do','does','did','will','would','could','should','may','might','can','find','tell','me','show','give','list','describe']); return q.toLowerCase().split(/\W+/).filter(w=>w.length>2&&!stop.has(w)); }
+
+function extractKeywords(q) {
+  const stop = new Set(['what','are','the','is','a','an','of','in','to','and','or','for','with','about','how','who','when','where','why','this','that','these','those','it','its','on','at','by','from','as','be','was','were','been','have','has','had','do','does','did','will','would','could','should','may','might','can','find','tell','me','show','give','list','describe','translate','summarise','summarize','explain']);
+  return q.toLowerCase().split(/\W+/).filter(function(w){ return w.length > 2 && !stop.has(w); });
+}
+
 function findRelevantPassages(text,kw,maxP,wSize) {
   if(!text||!kw.length) return [text.slice(0,wSize)];
   const words=text.split(/\s+/),scores=new Float32Array(words.length);
-  kw.forEach(k=>{const re=new RegExp(k,'i');words.forEach((w,i)=>{if(re.test(w))for(let j=Math.max(0,i-20);j<Math.min(words.length,i+20);j++)scores[j]+=1/(Math.abs(j-i)+1);});});
+  kw.forEach(function(k){const re=new RegExp(k,'i');words.forEach(function(w,i){if(re.test(w))for(let j=Math.max(0,i-20);j<Math.min(words.length,i+20);j++)scores[j]+=1/(Math.abs(j-i)+1);});});
   const cw=Math.floor(wSize/6),passages=[],used=new Set();
-  for(let p=0;p<maxP;p++){let bI=-1,bS=-1;for(let i=0;i<=words.length-cw;i+=Math.floor(cw/2)){if(used.has(Math.floor(i/cw)))continue;const s=scores.slice(i,i+cw).reduce((a,b)=>a+b,0);if(s>bS){bS=s;bI=i;}}if(bI<0||bS===0)break;used.add(Math.floor(bI/cw));passages.push(words.slice(bI,bI+cw).join(' '));}
+  for(let p=0;p<maxP;p++){let bI=-1,bS=-1;for(let i=0;i<=words.length-cw;i+=Math.floor(cw/2)){if(used.has(Math.floor(i/cw)))continue;const s=scores.slice(i,i+cw).reduce(function(a,b){return a+b;},0);if(s>bS){bS=s;bI=i;}}if(bI<0||bS===0)break;used.add(Math.floor(bI/cw));passages.push(words.slice(bI,bI+cw).join(' '));}
   return passages.length?passages:[words.slice(0,cw).join(' ')];
 }
 async function callClaude(userText, context) {
@@ -1191,13 +1277,20 @@ async function callClaude(userText, context) {
       'See the README.md for step-by-step instructions.'
     );
   }
+  const isAllMode = activeScope === 'all';
   const system = 'You are a scholarly assistant for the Alamut Library, a Digital Library of Ismaili Texts ' +
     'specialising in Arabic and Persian Ismaili literature, theology, philosophy, and poetry.\n\n' +
+    (isAllMode
+      ? 'The library contains ' + books.length + ' texts. You have been provided with the most relevant passages ' +
+        'retrieved from across the entire corpus based on the user\'s question. ' +
+        'Always cite which text (title and author) a passage comes from in your answer.\n\n'
+      : '') +
     'Your role:\n' +
     '- Answer questions accurately based on the provided text passages\n' +
+    '- Always cite which text a passage comes from\n' +
     '- Handle Arabic and Persian source texts with scholarly care\n' +
     '- When quoting Arabic or Persian, preserve the script and provide a translation\n' +
-    '- Note clearly if a question cannot be answered from the passages\n' +
+    '- If a question cannot be answered from the provided passages, say so clearly\n' +
     '- Maintain an academic but accessible tone; respond in English unless asked otherwise\n\n' +
     (context ? 'TEXT CONTEXT:\n' + context : 'No text context provided.');
 
