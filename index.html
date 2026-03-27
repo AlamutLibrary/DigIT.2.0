@@ -1059,18 +1059,21 @@ function searchAllTexts(pattern) {
   rc.className='ltr';
   if (!results.length) { rc.innerHTML='<div id="reader-empty"><div class="icon">🔍</div><p>No matches found across '+books.length+' loaded texts.</p></div>'; return; }
 
+  readerSnippets = [];
+
   rc.innerHTML=results.map(function(r){
     const snippetHtml=r.matches.slice(0,5).map(function(m){
       const s=Math.max(0,m.index-100), e=Math.min(r.content.length,m.index+m[0].length+100);
       const rawSnip=r.content.slice(s,e);
       const flags=pattern.flags.includes('g')?pattern.flags:pattern.flags+'g';
       const hi=esc(rawSnip).replace(new RegExp(escapeRe(esc(m[0])),flags.replace('g','')),function(match){return '<mark class="hit">'+match+'</mark>';});
-      const snippetText = rawSnip;
+      const snippetIdx = readerSnippets.length;
+      readerSnippets.push(rawSnip);
       return '<div class="search-snippet" onclick="openInReaderAtMatch('+r.i+','+m.index+')">'
         +(s>0?'<span style="color:var(--muted)">…</span>':'')+hi+(e<r.content.length?'<span style="color:var(--muted)">…</span>':'')
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px;">'
         +'<div class="search-snippet-hint">↗ click to open in reader</div>'
-        +'<button class="snippet-ai-btn" onclick="event.stopPropagation();translateSnippet('+JSON.stringify(snippetText)+')">🌐 Translate</button>'
+        +'<button class="snippet-ai-btn" onclick="event.stopPropagation();translateSnippet('+snippetIdx+')">🌐 Translate</button>'
         +'</div>'
         +'</div>';
     }).join('');
@@ -1253,6 +1256,7 @@ function detectLang(text) { if(!text)return''; const ar=(text.match(/[\u0600-\u0
 // ══ READER AI POPUP ══
 let readerSelectedText = '';
 let readerAIPopup = null;
+let readerSnippets = [];
 
 // Show popup on text selection within reader
 document.addEventListener('mouseup', function(e) {
@@ -1312,11 +1316,23 @@ function readerAIAction(action) {
   runReaderAI(prompt, label);
 }
 
-function translateSnippet(text) {
-  if (!text) return;
-  const prompt = 'Translate the following Arabic or Persian passage into English. Provide only the translation, then a brief note on any difficult terms:\n\n' + text;
-  runReaderAI(prompt, '🌐 Translation');
-  // Open reader panel if not open
+function translateSnippet(idx) {
+  const raw = readerSnippets[idx];
+  if (!raw) return;
+  // Strip OpenITI markup before sending to AI
+  const clean = raw
+    .replace(/#META#[^\n]*/g, '')
+    .replace(/^##+[^\n]*/gm, '')
+    .replace(/^#+\s*/gm, '')
+    .replace(/^~~/gm, '')
+    .replace(/PageV[\dM]+P\d+/g, '')
+    .replace(/\bms\d+\b/gi, '')
+    .replace(/\|/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!clean) return;
+  const prompt = 'Translate the following Arabic or Persian passage into English. Provide only the translation, then a brief note on any difficult terms:\n\n' + clean;
+  runReaderAI(prompt, '\ud83c\udf10 Translation');
   if (!readerOpen) toggleReader();
 }
 
