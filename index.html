@@ -382,10 +382,7 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
         <input type="checkbox" id="opt-regex" onchange="syncToggle('lbl-regex','opt-regex'); runSearch()">
         .* Regex
       </label>
-      <label class="search-toggle" id="lbl-case">
-        <input type="checkbox" id="opt-case" onchange="syncToggle('lbl-case','opt-case'); runSearch()">
-        Aa Case
-      </label>
+
       <label class="search-toggle" id="lbl-all">
         <input type="checkbox" id="opt-all" onchange="syncToggle('lbl-all','opt-all'); runSearch()">
         All Texts
@@ -614,28 +611,17 @@ function openInReader(idx) {
 }
 
 // ══ OpenITI mARkdown Renderer ══
-// Format reference (from actual corpus files):
-//   #META# TAG :: value     → extract value after ::, hide tag
-//   ###BOOK# TAG : value    → extract value after :, hide tag
-//   #META#Header#End#       → skip entirely
-//   ### | heading text      → h1 heading (strip leading | and spaces)
-//   ### || sub-heading      → h2 heading
-//   # (alone or paragraph)  → paragraph break marker, hidden
-//   ~~ continuation line    → line continuation (no break shown, just join)
-//   text %% text            → poetry hemistichs
-//   | ... |                 → pipe chars are formatting, strip them
 function renderOpenITI(raw) {
   const lines = raw.split('\n');
   let html = '';
   let poetryBuffer = [];
-  let paraBuffer   = [];  // collects ~~ continuation lines into one paragraph
+  let paraBuffer   = [];
 
   function flushPara() {
     if (!paraBuffer.length) return;
     html += '<p class="oiti-para">' + paraBuffer.join(' ') + '</p>';
     paraBuffer = [];
   }
-
   function flushPoetry() {
     if (!poetryBuffer.length) return;
     flushPara();
@@ -653,117 +639,129 @@ function renderOpenITI(raw) {
     poetryBuffer = [];
   }
 
-  // Strip all pipe characters used as formatting
-  function stripPipes(s) {
-    return s.replace(/\|+/g, '').trim();
+  // Strip all pipe characters used as OpenITI formatting markers
+  function stripPipes(s) { return s.replace(/\|/g, '').trim(); }
+
+  // Strip milestone tags: ms followed by digits anywhere in a string, e.g. ms039
+  function stripMilestones(s) { return s.replace(/\bms\d+\b/gi, '').trim(); }
+
+  // Strip inline page markers from text (PageV0MP001 etc) — render as badge
+  function extractPageBadges(s) {
+    return s.replace(/PageV(\d+|0M)P(\d+)\b/g, function(m, v, p) {
+      const volLabel = v === '0M' ? 'Intro' : 'Vol.' + parseInt(v);
+      return '<span class="oiti-page">' + volLabel + ' p.' + parseInt(p) + '</span>';
+    });
   }
 
-  // Escape HTML but preserve already-injected span tags (oiti-page)
-  function e(s) {
-    return esc(s);
+  // Clean a text string: strip pipes, milestones, then extract page badges
+  function clean(s) {
+    return extractPageBadges(stripMilestones(stripPipes(esc(s))));
   }
 
   lines.forEach(function(line) {
     const t = line.trim();
 
-    // ── Entirely skip blank lines and header-end markers ──
-    if (t === '' || t === '#META#Header#End#') {
-      return;
-    }
+    // ── 1. Entirely skip: blank, header-end, OpenITI root tag ──
+    if (t === '' || t === '#META#Header#End#' || /^#{6}OpenITI#/.test(t)) return;
 
-    // ── META tags: #META# TAG :: value ──
-    // Extract everything after "::" and display as a small metadata item
+    // ── 2. Skip META values that are NODATA / NOTGIVEN / NOCODE ──
     if (/^#META#/.test(t)) {
       const m = t.match(/::(.+)/);
       if (m) {
-        flushPoetry(); flushPara();
-        html += '<span class="oiti-ms">' + e(m[1].trim()) + '</span>';
+        const val = m[1].trim();
+        if (val && val !== 'NODATA' && val !== 'NOTGIVEN' && val !== 'NOCODE') {
+          flushPoetry(); flushPara();
+          html += '<span class="oiti-ms">' + esc(val) + '</span>';
+        }
       }
-      // if no :: (e.g. #META#Header#End# already caught above), skip silently
       return;
     }
 
-    // ── Section/book tags: ###SOMETHING# TAG : value ──
-    // Lines like "###BOOK# 001.BookTITLE : Title Text"
+    // ── 3. Skip subject/bibliography and similar tag-only lines ──
+    //    e.g. #####SUBJECT#BIBLIOGRAPHY#  or  ##SUBJECT#BIBLIOGRAPHY#
+    if (/^#{2,}[A-Z#]+$/.test(t)) return;
+
+    // ── 4. Section/book tags: ###WORD# TAG : value  (e.g. ###BOOK# ...) ──
     if (/^###\w+#/.test(t)) {
       const m = t.match(/:(.+)/);
       if (m) {
         flushPoetry(); flushPara();
-        html += '<div class="oiti-head2">' + e(stripPipes(m[1].trim())) + '</div>';
+        html += '<div class="oiti-head2">' + clean(m[1].trim()) + '</div>';
       }
       return;
     }
 
-    // ── Headings: ### | text = h1,  ### || text = h2 ──
+    // ── 5. Headings: ### followed by | text | or || text || ──
+    //    Strip surrounding pipes but keep the text inside
     if (/^###/.test(t)) {
       flushPoetry(); flushPara();
       const inner = t.replace(/^###\s*/, '');
+      // Strip leading || for h2, | for h1, and any trailing |
       if (/^\|\|/.test(inner)) {
-        // ### || subheading
-        html += '<div class="oiti-head2">' + e(inner.replace(/^\|+\s*/, '')) + '</div>';
+        html += '<div class="oiti-head2">' + clean(inner.replace(/^\|+|\|+$/g, '')) + '</div>';
       } else if (/^\|/.test(inner)) {
-        // ### | heading
-        html += '<div class="oiti-head1">' + e(inner.replace(/^\|+\s*/, '')) + '</div>';
+        html += '<div class="oiti-head1">' + clean(inner.replace(/^\|+|\|+$/g, '')) + '</div>';
       } else {
-        // ### with no pipe — treat as h1
-        html += '<div class="oiti-head1">' + e(stripPipes(inner)) + '</div>';
+        html += '<div class="oiti-head1">' + clean(inner) + '</div>';
       }
       return;
     }
 
-    // ── Single # — paragraph break marker, hidden ──
-    // Could be "# " followed by text (new paragraph) or just "#" alone
+    // ── 6. Single # alone — paragraph break, hidden ──
     if (/^#\s*$/.test(t)) {
       flushPoetry(); flushPara();
-      return; // just a paragraph break, nothing to display
+      return;
     }
+
+    // ── 7. # followed by text — new paragraph ──
     if (/^#\s+/.test(t)) {
       flushPoetry(); flushPara();
-      // The text after # is the first line of a new paragraph
       const rest = t.replace(/^#\s+/, '').trim();
-      if (rest) paraBuffer.push(e(rest));
+      if (rest) paraBuffer.push(clean(rest));
       return;
     }
 
-    // ── ~~ continuation line — join to current paragraph ──
+    // ── 8. ~~ continuation line — join to current paragraph ──
     if (/^~~/.test(t)) {
       const rest = t.replace(/^~~/, '').trim();
-      if (rest) paraBuffer.push(e(rest));
+      if (rest) paraBuffer.push(clean(rest));
       return;
     }
 
-    // ── Poetry: hemistich %% hemistich ──
+    // ── 9. Poetry: hemistich %% hemistich ──
     if (t.includes('%%')) {
       flushPara();
-      const parts = t.split('%%').map(function(s){ return e(stripPipes(s.trim())); }).filter(Boolean);
-      parts.forEach(function(p){ poetryBuffer.push(p); });
+      t.split('%%').map(function(s){ return clean(s.trim()); }).filter(Boolean)
+       .forEach(function(p){ poetryBuffer.push(p); });
       return;
     }
 
-    // ── Page markers inline: PageV01P003 ──
-    if (/PageV\d+P\d+/.test(t)) {
+    // ── 10. Standalone page markers (entire line is a page ref) ──
+    //    Handles standard PageV01P003 AND intro pages PageV0MP001
+    if (/^PageV(\d+|0M)P\d+/.test(t)) {
       flushPoetry(); flushPara();
-      const lbl = t.match(/PageV(\d+)P(\d+)/);
-      if (lbl) html += '<span class="oiti-page">Vol.'+parseInt(lbl[1])+' p.'+parseInt(lbl[2])+'</span>';
+      html += extractPageBadges(esc(t));
       return;
     }
 
-    // ── Tilde section break ~~~ (3+ tildes on their own line) ──
+    // ── 11. Tilde section break (3+ tildes alone) ──
     if (/^~{3,}$/.test(t)) {
       flushPoetry(); flushPara();
       html += '<hr style="border:none;border-top:1px dashed var(--border);margin:14px 0;">';
       return;
     }
 
-    // ── Everything else: regular text ──
+    // ── 12. Milestone tags on their own line: ms039 ──
+    if (/^ms\d+$/i.test(t)) return;
+
+    // ── 13. Everything else: regular text ──
     flushPoetry();
-    // If we already have a paraBuffer running, this is a continuation
-    paraBuffer.push(e(stripPipes(t)));
+    paraBuffer.push(clean(t));
   });
 
   flushPoetry();
   flushPara();
-  return html || '<p class="oiti-para">'+esc(raw)+'</p>';
+  return html || '<p class="oiti-para">' + esc(raw) + '</p>';
 }
 
 // Opens a book and highlights match at charIndex
@@ -781,7 +779,7 @@ function onSearchInput() { clearTimeout(searchTimer); searchTimer=setTimeout(run
 function runSearch() {
   const query    = document.getElementById('search-input').value;
   const useRegex = document.getElementById('opt-regex').checked;
-  const useCase  = document.getElementById('opt-case').checked;
+  const useCase  = false; // Case toggle removed — always case-insensitive for Arabic/Persian
   const allTexts = document.getElementById('opt-all').checked;
   const countEl  = document.getElementById('search-count');
   const si       = document.getElementById('search-input');
