@@ -249,6 +249,85 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
   .search-snippet:hover { background:var(--cream); }
   .search-snippet-hint { font-size:9px; font-family:'IBM Plex Mono',monospace;
                          color:var(--muted); margin-top:3px; }
+
+  /* ══ Reader AI Popup ══ */
+  #reader-ai-popup {
+    position: fixed; z-index: 999;
+    background: var(--ink); color: var(--paper);
+    border-radius: 8px; padding: 4px;
+    display: none; flex-direction: column; gap: 2px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+    min-width: 160px;
+    animation: popupIn 0.12s ease;
+  }
+  @keyframes popupIn { from{opacity:0;transform:scale(.95)translateY(-4px);} to{opacity:1;transform:scale(1)translateY(0);} }
+  #reader-ai-popup .popup-label {
+    font-size: 9px; font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: #5a4e40; padding: 4px 8px 2px;
+  }
+  .popup-btn {
+    display: flex; align-items: center; gap: 7px;
+    padding: 6px 10px; border-radius: 5px;
+    background: none; border: none; cursor: pointer;
+    font-size: 12px; font-family: 'IBM Plex Sans', sans-serif;
+    color: var(--paper); text-align: left; width: 100%;
+    transition: background .12s;
+  }
+  .popup-btn:hover { background: #2a2420; }
+  .popup-btn .btn-icon { font-size: 13px; flex-shrink: 0; }
+
+  /* ══ Reader AI Response Panel ══ */
+  #reader-ai-response {
+    display: none; flex-direction: column;
+    border-top: 1px solid var(--border);
+    background: var(--cream); flex-shrink: 0;
+    max-height: 240px;
+  }
+  #reader-ai-response.open { display: flex; }
+  #reader-ai-response-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 14px; border-bottom: 1px solid var(--border);
+    font-size: 10px; font-family: 'IBM Plex Mono', monospace;
+    color: var(--muted); letter-spacing: .06em; text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  #reader-ai-close {
+    background: none; border: none; cursor: pointer;
+    font-size: 14px; color: var(--muted); line-height: 1;
+    transition: color .12s;
+  }
+  #reader-ai-close:hover { color: var(--ink); }
+  #reader-ai-body {
+    flex: 1; overflow-y: auto; padding: 12px 14px;
+    font-size: 13px; line-height: 1.7; color: var(--ink);
+  }
+  #reader-ai-body::-webkit-scrollbar { width: 3px; }
+  #reader-ai-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  #reader-ai-body p { margin-bottom: 8px; }
+  #reader-ai-body p:last-child { margin-bottom: 0; }
+  #reader-ai-loading {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; font-family: 'IBM Plex Mono', monospace;
+    color: var(--muted);
+  }
+  #reader-ai-loading span {
+    width: 5px; height: 5px; background: var(--muted);
+    border-radius: 50%; animation: bounce 1.2s infinite;
+  }
+  #reader-ai-loading span:nth-child(2){animation-delay:.2s;}
+  #reader-ai-loading span:nth-child(3){animation-delay:.4s;}
+
+  /* ══ Translate button on search snippet cards ══ */
+  .snippet-ai-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-top: 5px; padding: 3px 8px;
+    background: var(--ink); color: var(--gold-light);
+    border: none; border-radius: 4px; cursor: pointer;
+    font-size: 10px; font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: .04em; transition: background .12s;
+  }
+  .snippet-ai-btn:hover { background: #2a2420; }
 </style>
 </head>
 <body>
@@ -338,8 +417,8 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
       <h2>Explore the Alamut Library</h2>
       <p>Load texts from the Digital Ismaili Texts v.2.0 corpus, or add your own, then ask anything — about Ismaili thought, history, philosophy, key passages, comparisons.</p>
       <div class="chips">
-        <div class="chip" onclick="useChip(this)">What is the main subject of this text?</div>
-        <div class="chip" onclick="useChip(this)">Summarise the key points</div>
+        <div class="chip" onclick="useChip(this)">What are the central theological arguments?</div>
+        <div class="chip" onclick="useChip(this)">Summarise the key doctrines</div>
         <div class="chip" onclick="useChip(this)">Find references to the Imam</div>
         <div class="chip" onclick="useChip(this)">Compare ideas across texts</div>
         <div class="chip" onclick="useChip(this)">Translate the opening passage</div>
@@ -410,6 +489,29 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
       <p>Select a text from the sidebar to open it here for reading.</p>
     </div>
   </div>
+
+  <!-- AI RESPONSE PANEL (slides up from bottom of reader) -->
+  <div id="reader-ai-response">
+    <div id="reader-ai-response-header">
+      <span id="reader-ai-label">AI Response</span>
+      <button id="reader-ai-close" onclick="closeReaderAI()" title="Close">✕</button>
+    </div>
+    <div id="reader-ai-body"></div>
+  </div>
+</div>
+
+<!-- FLOATING AI POPUP (appears on text selection) -->
+<div id="reader-ai-popup">
+  <div class="popup-label">Selected text</div>
+  <button class="popup-btn" onclick="readerAIAction('translate')">
+    <span class="btn-icon">🌐</span> Translate
+  </button>
+  <button class="popup-btn" onclick="readerAIAction('explain')">
+    <span class="btn-icon">💡</span> Explain
+  </button>
+  <button class="popup-btn" onclick="readerAIAction('ask')">
+    <span class="btn-icon">💬</span> Ask AI about this
+  </button>
 </div>
 
 <script>
@@ -844,9 +946,13 @@ function searchAllTexts(pattern) {
       const rawSnip=r.content.slice(s,e);
       const flags=pattern.flags.includes('g')?pattern.flags:pattern.flags+'g';
       const hi=esc(rawSnip).replace(new RegExp(escapeRe(esc(m[0])),flags.replace('g','')),function(match){return '<mark class="hit">'+match+'</mark>';});
+      const snippetText = rawSnip;
       return '<div class="search-snippet" onclick="openInReaderAtMatch('+r.i+','+m.index+')">'
         +(s>0?'<span style="color:var(--muted)">…</span>':'')+hi+(e<r.content.length?'<span style="color:var(--muted)">…</span>':'')
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px;">'
         +'<div class="search-snippet-hint">↗ click to open in reader</div>'
+        +'<button class="snippet-ai-btn" onclick="event.stopPropagation();translateSnippet('+JSON.stringify(snippetText)+')">🌐 Translate</button>'
+        +'</div>'
         +'</div>';
     }).join('');
     return '<div style="margin-bottom:22px;">'
@@ -1023,6 +1129,133 @@ function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
 function slugify(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
 function setStatus(id,msg,cls) { const el=document.getElementById(id); el.textContent=msg; el.className='sb-status '+cls; }
 function detectLang(text) { if(!text)return''; const ar=(text.match(/[\u0600-\u06FF]/g)||[]).length,fa=(text.match(/[\u067E\u0686\u06AF\u06CC]/g)||[]).length; if(ar<10)return'en'; return fa>ar*0.05?'fa':'ar'; }
+
+
+// ══ READER AI POPUP ══
+let readerSelectedText = '';
+let readerAIPopup = null;
+
+// Show popup on text selection within reader
+document.addEventListener('mouseup', function(e) {
+  const popup = document.getElementById('reader-ai-popup');
+  const rc    = document.getElementById('reader-content');
+
+  // If click was on popup itself, do nothing
+  if (popup && popup.contains(e.target)) return;
+
+  const sel  = window.getSelection();
+  const text = sel ? sel.toString().trim() : '';
+
+  if (text.length > 3 && rc && rc.contains(sel.anchorNode)) {
+    readerSelectedText = text;
+    const range = sel.getRangeAt(0);
+    const rect  = range.getBoundingClientRect();
+    popup.style.display = 'flex';
+    // Position above the selection, centred
+    let left = rect.left + (rect.width / 2) - 80;
+    let top  = rect.top + window.scrollY - popup.offsetHeight - 8;
+    // Keep within viewport
+    left = Math.max(8, Math.min(left, window.innerWidth - 176));
+    if (top < 8) top = rect.bottom + window.scrollY + 8;
+    popup.style.left = left + 'px';
+    popup.style.top  = top  + 'px';
+  } else {
+    if (popup && !popup.contains(e.target)) popup.style.display = 'none';
+  }
+});
+
+// Hide popup on scroll or Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.getElementById('reader-ai-popup').style.display = 'none';
+  }
+});
+document.getElementById('reader-content') && document.addEventListener('scroll', function() {
+  document.getElementById('reader-ai-popup').style.display = 'none';
+}, true);
+
+function readerAIAction(action) {
+  document.getElementById('reader-ai-popup').style.display = 'none';
+  const text = readerSelectedText;
+  if (!text) return;
+
+  let prompt, label;
+  if (action === 'translate') {
+    prompt = 'Translate the following Arabic or Persian passage into English. Provide only the translation, then a brief note on any difficult terms:\n\n' + text;
+    label  = '🌐 Translation';
+  } else if (action === 'explain') {
+    prompt = 'Explain the following passage from an Ismaili text in plain English. Include its theological or philosophical significance:\n\n' + text;
+    label  = '💡 Explanation';
+  } else {
+    prompt = 'The user has selected the following passage from an Ismaili text and wants to discuss it:\n\n' + text + '\n\nPlease provide scholarly commentary and invite further questions.';
+    label  = '💬 Commentary';
+  }
+  runReaderAI(prompt, label);
+}
+
+function translateSnippet(text) {
+  if (!text) return;
+  const prompt = 'Translate the following Arabic or Persian passage into English. Provide only the translation, then a brief note on any difficult terms:\n\n' + text;
+  runReaderAI(prompt, '🌐 Translation');
+  // Open reader panel if not open
+  if (!readerOpen) toggleReader();
+}
+
+function runReaderAI(prompt, label) {
+  if (!WORKER_URL) { alert('Cloudflare Worker not configured.'); return; }
+
+  const panel = document.getElementById('reader-ai-response');
+  const body  = document.getElementById('reader-ai-body');
+  const lbl   = document.getElementById('reader-ai-label');
+
+  lbl.textContent = label;
+  panel.classList.add('open');
+  body.innerHTML  = '<div id="reader-ai-loading"><span></span><span></span><span></span>&nbsp;Thinking…</div>';
+
+  // Build a minimal context from the current book
+  let context = '';
+  if (readerBookIdx !== null && books[readerBookIdx]) {
+    const b = books[readerBookIdx];
+    context = 'Source text: ' + b.title + (b.author ? ' by ' + b.author : '') + '.';
+  }
+
+  const system = 'You are a scholarly assistant for the Alamut Library, a Digital Library of Ismaili Texts. '
+    + 'You help readers understand Arabic and Persian Ismaili texts. '
+    + 'Be concise, accurate and academically informed. '
+    + (context ? context : '');
+
+  fetch(WORKER_URL + '/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 600,
+      system: system,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    const text = data.content ? data.content.map(function(b){return b.text||'';}).join('') : (data.error ? data.error.message : 'No response.');
+    body.innerHTML = formatReaderAIResponse(text);
+  })
+  .catch(function(err) {
+    body.innerHTML = '<p style="color:var(--error)">Error: ' + esc(err.message) + '</p>';
+  });
+}
+
+function formatReaderAIResponse(text) {
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .split('\n\n')
+    .map(function(p){ return '<p>'+p.replace(/\n/g,'<br>')+'</p>'; })
+    .join('');
+}
+
+function closeReaderAI() {
+  document.getElementById('reader-ai-response').classList.remove('open');
+}
 
 // ══ FILE READER fix (FileReader needs correct usage) ══
 (function patchReadFile(){
