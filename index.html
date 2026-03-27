@@ -536,7 +536,7 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
       <h2>Explore the Alamut Library</h2>
       <p>Load texts from the Digital Ismaili Texts v.2.0 corpus, or add your own, then ask anything — about Ismaili thought, history, philosophy, key passages, comparisons.</p>
       <div class="chips">
-        <div class="chip" onclick="useChip(this)">What are is this text about?</div>
+        <div class="chip" onclick="useChip(this)">What is this text about?</div>
         <div class="chip" onclick="useChip(this)">Summarise the key ideas of the text</div>
         <div class="chip" onclick="useChip(this)">Find references to the Imam</div>
         <div class="chip" onclick="useChip(this)">Compare ideas across texts</div>
@@ -1186,28 +1186,63 @@ function buildContext(query) {
   const allPatterns = kw.concat(queryWords);
 
   if (!allPatterns.length) {
-    // No keywords — return opening of first few books
+    // No keywords — return cleaned body text of first few books
     return books.slice(0, 5).map(function(b){
-      return '=== ' + b.title + ' ===\n' + b.content.slice(0, 1500);
+      const lines = (b.content || '').split('\n');
+      const bodyLines = lines.filter(function(l){
+        const t = l.trim();
+        return t && !t.startsWith('#META#') && !t.startsWith('#####') && !t.startsWith('######') && t !== '#META#Header#End#';
+      });
+      const bodyText = bodyLines.join(' ').replace(/^#+\s*/gm,'').replace(/~~|\|/g,'').slice(0, 1500);
+      return '=== ' + b.title + ' ===\n' + bodyText;
     }).join('\n\n');
+  }
+
+  // Strip OpenITI markup from a paragraph before scoring/sending
+  function cleanPara(p) {
+    return p
+      .replace(/^#META#.*$/gm, '')       // remove all META lines
+      .replace(/^#{2,}[^\n]*/gm, '')    // remove ##TAG# lines
+      .replace(/^######OpenITI#.*$/gm,'')// remove OpenITI root tag
+      .replace(/^#\s*$/gm, '')          // remove lone # paragraph markers
+      .replace(/^#\s+/gm, '')           // remove leading # from paragraphs
+      .replace(/^~~/gm, '')              // remove ~~ continuation markers
+      .replace(/PageV[\dM]+P\d+/g, '') // remove page markers
+      .replace(/\bms\d+\b/gi, '')     // remove milestone tags
+      .replace(/\|/g, '')               // remove pipes
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   // Score paragraphs across all books
   const scored = [];
   books.forEach(function(b, bookIdx) {
     if (!b.content) return;
-    // Split into paragraphs (double newline or # markers in OpenITI)
-    const paras = b.content.split(/\n(?:#|~~|\n)/).map(function(p){ return p.trim(); }).filter(function(p){ return p.length > 30; });
-    paras.forEach(function(para) {
+    // Split on blank lines or OpenITI paragraph markers
+    const rawParas = b.content.split(/\n{2,}|\n(?=# )|\n(?=##)/)
+      .map(function(p){ return p.trim(); })
+      .filter(function(p){ return p.length > 20; });
+
+    rawParas.forEach(function(rawPara) {
+      // Skip metadata blocks entirely — don't score them
+      if (/^#META#/.test(rawPara.trim())) return;
+      if (/^#{5,}/.test(rawPara.trim())) return;
+      if (/^######OpenITI/.test(rawPara.trim())) return;
+      if (/^#META#Header#End#/.test(rawPara.trim())) return;
+
+      const para = cleanPara(rawPara);
+      if (para.length < 20) return; // skip if nothing left after cleaning
+
       let score = 0;
       allPatterns.forEach(function(kw) {
         try {
           const re = new RegExp(kw, 'gi');
           const hits = (para.match(re) || []).length;
-          score += hits * (kw.length > 3 ? 2 : 1); // longer keywords score higher
+          score += hits * (kw.length > 3 ? 2 : 1);
         } catch(e) {}
       });
       if (score > 0) {
+        // Store cleaned para for context, but also keep raw for display
         scored.push({ bookIdx: bookIdx, title: b.title, author: b.author, para: para, score: score });
       }
     });
@@ -1232,9 +1267,15 @@ function buildContext(query) {
 
   // Step 3: group by book and build context string
   if (!selected.length) {
-    // Nothing matched — return openings of first 5 books
+    // Nothing matched — return cleaned openings of first 5 books, skipping metadata
     return books.slice(0, 5).map(function(b){
-      return '=== ' + b.title + (b.author ? ' | ' + b.author : '') + ' ===\n' + b.content.slice(0, 1000);
+      const lines = (b.content || '').split('\n');
+      const bodyLines = lines.filter(function(l){
+        const t = l.trim();
+        return t && !t.startsWith('#META#') && !t.startsWith('#####') && !t.startsWith('######') && t !== '#META#Header#End#';
+      });
+      const bodyText = bodyLines.join(' ').replace(/^#+\s*/gm,'').replace(/~~|\|/g,'').slice(0, 1000);
+      return '=== ' + b.title + (b.author ? ' | ' + b.author : '') + ' ===\n' + bodyText;
     }).join('\n\n');
   }
 
