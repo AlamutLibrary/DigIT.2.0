@@ -301,9 +301,12 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
 
   <div id="messages-wrap">
     <div id="empty-state">
-      <div class="big-icon">🕌</div>
+      <img src="https://raw.githubusercontent.com/AlamutLibrary/DigIT.2.0/master/images/logo.png" 
+     alt="Alamut Library" 
+     style="width:80px;height:80px;object-fit:contain;margin-bottom:4px;"
+     onerror="this.style.display='none'">
       <h2>Explore the Alamut Library</h2>
-      <p>Load texts from GitHub or add your own, then ask anything — theology, philosophy, key passages, comparisons.</p>
+      <p>Load texts from the Digital Ismaili Texts v.2.0 corpus, or add your own, then ask anything — about Ismaili thought, history, philosophy, key passages, comparisons.</p>
       <div class="chips">
         <div class="chip" onclick="useChip(this)">What are the central theological arguments?</div>
         <div class="chip" onclick="useChip(this)">Summarise the key doctrines</div>
@@ -700,7 +703,6 @@ function formatResponse(text) {
 }
 function showEmptyState(show) { const el=document.getElementById('empty-state'); if(el) el.style.display=(show&&!messages.length)?'':'none'; }
 function appendMsg(m) { messages.push(m); const wrap=document.getElementById('messages-wrap'); showEmptyState(false); wrap.insertBefore(buildMsgEl(m),document.getElementById('typing')); wrap.scrollTop=wrap.scrollHeight; }
-
 // ══ SEND ══
 async function sendMessage() {
   if (isLoading) return;
@@ -709,10 +711,39 @@ async function sendMessage() {
   input.value=''; autoResize(input);
   appendMsg({role:'user',content:text});
   showTyping(true); isLoading=true;
-  try { const reply=await callClaude(text,buildContext(text)); appendMsg({role:'assistant',content:reply}); }
-  catch(e) { appendMsg({role:'assistant',content:`Error: ${e.message}`}); }
+  try {
+    const reply = await callClaudeWithRetry(text, buildContext(text));
+    appendMsg({role:'assistant',content:reply});
+  } catch(e) {
+    const msg = e.message.toLowerCase().includes('overload')
+      ? 'The AI is currently busy due to high demand. Please try again in a moment.'
+      : 'Error: ' + e.message;
+    appendMsg({role:'assistant',content:msg});
+  }
   showTyping(false); isLoading=false;
   document.getElementById('messages-wrap').scrollTop=999999;
+}
+async function callClaudeWithRetry(userText, context, attempt=1) {
+  try {
+    return await callClaude(userText, context);
+  } catch(e) {
+    if (e.message.toLowerCase().includes('overload') && attempt < 3) {
+      const wait = attempt * 5;
+      const t = document.getElementById('typing');
+      const orig = t.innerHTML;
+      let remaining = wait;
+      const countdown = setInterval(() => {
+        t.innerHTML = '<span style="font-size:12px;font-family:IBM Plex Mono,monospace;color:var(--muted);">API busy — retrying in ' + remaining + 's…</span>';
+        remaining--;
+        if (remaining < 0) { clearInterval(countdown); t.innerHTML = orig; }
+      }, 1000);
+      await new Promise(r => setTimeout(r, wait * 1000));
+      clearInterval(countdown);
+      t.innerHTML = orig;
+      return callClaudeWithRetry(userText, context, attempt + 1);
+    }
+    throw e;
+  }
 }
 function useChip(el) { if(!books.length)return; document.getElementById('chat-input').value=el.textContent; sendMessage(); }
 
