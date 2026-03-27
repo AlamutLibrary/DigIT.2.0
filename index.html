@@ -1224,6 +1224,9 @@ function runReaderAI(prompt, label) {
     + 'Be concise, accurate and academically informed. '
     + (context ? context : '');
 
+  readerAIFetch(prompt, system, body, 1);
+}
+function readerAIFetch(prompt, system, body, attempt) {
   fetch(WORKER_URL + '/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
@@ -1236,14 +1239,32 @@ function runReaderAI(prompt, label) {
   })
   .then(function(r){ return r.json(); })
   .then(function(data) {
-    const text = data.content ? data.content.map(function(b){return b.text||'';}).join('') : (data.error ? data.error.message : 'No response.');
-    body.innerHTML = formatReaderAIResponse(text);
+    if (data.error && data.error.message && data.error.message.toLowerCase().includes('overload') && attempt < 3) {
+      const wait = attempt * 5;
+      let remaining = wait;
+      body.innerHTML = '<div id="reader-ai-loading"><span></span><span></span><span></span>&nbsp;API busy — retrying in <span id="reader-countdown">' + remaining + '</span>s…</div>';
+      const countdown = setInterval(function() {
+        remaining--;
+        const el = document.getElementById('reader-countdown');
+        if (el) el.textContent = remaining;
+        if (remaining <= 0) clearInterval(countdown);
+      }, 1000);
+      setTimeout(function() {
+        clearInterval(countdown);
+        body.innerHTML = '<div id="reader-ai-loading"><span></span><span></span><span></span>&nbsp;Thinking…</div>';
+        readerAIFetch(prompt, system, body, attempt + 1);
+      }, wait * 1000);
+    } else {
+      const text = data.content
+        ? data.content.map(function(b){ return b.text || ''; }).join('')
+        : (data.error ? (data.error.message.includes('overload') ? 'The AI is currently busy. Please try again in a moment.' : data.error.message) : 'No response.');
+      body.innerHTML = formatReaderAIResponse(text);
+    }
   })
   .catch(function(err) {
     body.innerHTML = '<p style="color:var(--error)">Error: ' + esc(err.message) + '</p>';
   });
 }
-
 function formatReaderAIResponse(text) {
   return text
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
