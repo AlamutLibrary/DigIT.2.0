@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alamut Library — Digital Ismaili Texts</title>
 <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,300;0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-```
 <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
 <style>
 /* ── TOKENS ── */
@@ -105,7 +104,7 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--paper); color
 #chat-header { padding: 12px 18px; border-bottom: 1px solid var(--border); background: var(--paper); display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
 #chat-header-icon { font-size: 17px; }
 #chat-header-info { flex: 1; min-width: 0; }
-#chat-header-title { font-family: 'Libre Franklin', sans-serif; font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#chat-header-title { font-family: 'Libre Franklin', sans-serif; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #chat-header-meta  { font-size: 10px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
 
 #mode-toggle { display: flex; gap: 2px; background: var(--cream); border: 1px solid var(--border); border-radius: 6px; padding: 2px; }
@@ -220,6 +219,36 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
 #reader-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; color: var(--muted); padding: 40px 24px; height: 100%; }
 #reader-empty .icon { font-size: 36px; }
 #reader-empty p { font-size: 12px; max-width: 260px; line-height: 1.6; }
+
+  /* ══ OpenITI mARkdown rendered styles ══ */
+  .oiti-page  { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:9px; color:#fff;
+                background:var(--gold-dim); border-radius:3px; padding:1px 5px; margin:0 3px;
+                letter-spacing:.04em; vertical-align:middle; }
+  .oiti-head1 { font-family:'Libre Franklin',sans-serif; font-size:20px; font-weight:700;
+                color:var(--ink); margin:24px 0 10px; padding-bottom:6px;
+                border-bottom:2px solid var(--gold); line-height:1.3; }
+  .oiti-head2 { font-family:'Libre Franklin',sans-serif; font-size:16px; font-weight:600;
+                color:var(--ink); margin:18px 0 8px; line-height:1.3; }
+  .oiti-head3 { font-family:'Libre Franklin',sans-serif; font-size:14px; font-weight:600;
+                color:var(--muted); margin:14px 0 6px; line-height:1.3; }
+  .oiti-para  { margin-bottom:1em; }
+  .oiti-poetry { margin:12px 0; padding:10px 16px; background:var(--cream);
+                 border-right:3px solid var(--gold); border-radius:4px; }
+  .oiti-bayt  { display:grid; grid-template-columns:1fr 1fr; gap:0 24px;
+                margin:4px 0; padding:3px 0; border-bottom:1px dotted var(--border); }
+  .oiti-bayt .s1, .oiti-bayt .s2 { text-align:right; }
+  .oiti-ms    { font-size:10px; color:#b0a090; font-family:'IBM Plex Mono',monospace;
+                display:block; margin:14px 0 4px; letter-spacing:.04em; }
+  #reader-content.rtl .oiti-head1,
+  #reader-content.rtl .oiti-head2,
+  #reader-content.rtl .oiti-head3 { text-align:right; }
+  #reader-content.rtl .oiti-bayt  { direction:rtl; }
+  .search-snippet { padding:7px 10px; margin:4px 0; border:1px solid var(--border);
+                    border-radius:5px; font-size:12px; line-height:1.7; cursor:pointer;
+                    background:#faf8f3; transition:background .15s; }
+  .search-snippet:hover { background:var(--cream); }
+  .search-snippet-hint { font-size:9px; font-family:'IBM Plex Mono',monospace;
+                         color:var(--muted); margin-top:3px; }
 </style>
 </head>
 <body>
@@ -578,13 +607,109 @@ function openInReader(idx) {
   const raw=b.content||'';
   if (!raw.trim()) { rc.innerHTML='<div id="reader-empty"><div class="icon">📜</div><p>No content loaded for this text.</p></div>'; return; }
 
-  // Split into paragraphs; preserve single newlines as line breaks within paragraphs
-  const paras=raw.split(/\n{2,}/).map(p=>p.trim()).filter(Boolean);
-  rc.innerHTML=paras.map((p,i)=>`<p data-para="${i}">${esc(p).replace(/\n/g,'<br>')}</p>`).join('');
+  rc.innerHTML = renderOpenITI(raw);
 
-  // Re-run search if there's an active query
   const q=document.getElementById('search-input').value.trim();
   if (q) runSearch(); else clearHighlights();
+}
+
+// ══ OpenITI mARkdown Renderer ══
+function renderOpenITI(raw) {
+  const lines = raw.split('\n');
+  let html = '';
+  let poetryBuffer = [];
+
+  function flushPoetry() {
+    if (!poetryBuffer.length) return;
+    html += '<div class="oiti-poetry">';
+    for (let i=0; i<poetryBuffer.length; i+=2) {
+      const s1 = poetryBuffer[i]   || '';
+      const s2 = poetryBuffer[i+1] || '';
+      if (s2) {
+        html += '<div class="oiti-bayt"><span class="s1">'+esc(s1)+'</span><span class="s2">'+esc(s2)+'</span></div>';
+      } else {
+        html += '<div class="oiti-bayt"><span class="s1" style="grid-column:1/-1;text-align:center;">'+esc(s1)+'</span></div>';
+      }
+    }
+    html += '</div>';
+    poetryBuffer = [];
+  }
+
+  lines.forEach(function(line) {
+    const t = line.trim();
+
+    if (t === '') { flushPoetry(); return; }
+
+    // OpenITI metadata/ms reference lines starting with #####
+    if (/^#{5}/.test(t)) {
+      flushPoetry();
+      html += '<span class="oiti-ms">'+esc(t.replace(/^#+\s*/,''))+'</span>';
+      return;
+    }
+
+    // Headings: ### h1, ## h2, # h3
+    const h1 = t.match(/^###\s+(.+)/);
+    const h2 = t.match(/^##\s+(.+)/);
+    const h3 = t.match(/^#\s+(.+)/);
+    if (h1) { flushPoetry(); html += '<div class="oiti-head1">'+esc(h1[1])+'</div>'; return; }
+    if (h2) { flushPoetry(); html += '<div class="oiti-head2">'+esc(h2[1])+'</div>'; return; }
+    if (h3) { flushPoetry(); html += '<div class="oiti-head3">'+esc(h3[1])+'</div>'; return; }
+
+    // Tilda paragraph/section break
+    if (/^~+$/.test(t)) {
+      flushPoetry();
+      html += '<hr style="border:none;border-top:1px dashed var(--border);margin:12px 0;">';
+      return;
+    }
+
+    // Poetry lines: hemistich %% hemistich
+    if (t.includes('%%')) {
+      const parts = t.split('%%').map(function(s){return s.trim();}).filter(Boolean);
+      parts.forEach(function(p){ poetryBuffer.push(p); });
+      return;
+    }
+
+    // Page markers within pipe delimiters: |PageV01P003|
+    if (t.includes('|')) {
+      flushPoetry();
+      let processed = t.replace(/\|PageV(\d+)P(\d+)\|/g, function(m,v,p) {
+        return '<span class="oiti-page">Vol.'+parseInt(v)+' p.'+parseInt(p)+'</span>';
+      });
+      // Standalone OpenITI ref e.g. OpenITI/PER0375AH
+      processed = processed.replace(/OpenITI\/([^\s|]+)/g, function(m,ref) {
+        return '<span class="oiti-page">'+esc(ref)+'</span>';
+      });
+      processed = processed.replace(/^\|+|\|+$/g,'').trim();
+      if (processed) html += '<p class="oiti-para">'+processed+'</p>';
+      return;
+    }
+
+    // Standalone page markers: PageV01P003 or OpenITI/PER0375AH
+    if (/PageV\d+P\d+/.test(t) || /OpenITI\//.test(t)) {
+      flushPoetry();
+      const lbl = t.match(/PageV(\d+)P(\d+)/);
+      const ref  = t.match(/OpenITI\/([^\s]+)/);
+      if (lbl) html += '<span class="oiti-page">Vol.'+parseInt(lbl[1])+' p.'+parseInt(lbl[2])+'</span>';
+      else if (ref) html += '<span class="oiti-page">'+esc(ref[1])+'</span>';
+      return;
+    }
+
+    // Regular paragraph line
+    flushPoetry();
+    html += '<p class="oiti-para">'+esc(t)+'</p>';
+  });
+
+  flushPoetry();
+  return html || '<p class="oiti-para">'+esc(raw)+'</p>';
+}
+
+// Opens a book and highlights match at charIndex
+function openInReaderAtMatch(bookIdx, charIndex) {
+  openInReader(bookIdx);
+  const optAll = document.getElementById('opt-all');
+  if (optAll.checked) { optAll.checked=false; syncToggle('lbl-all','opt-all'); }
+  const q = document.getElementById('search-input').value.trim();
+  if (q) { setTimeout(function(){ runSearch(); if(searchHits.length){searchHitIdx=0;activateHit(0);} }, 80); }
 }
 
 // ══ SEARCH ══
@@ -652,22 +777,23 @@ function searchAllTexts(pattern) {
   rc.className='ltr';
   if (!results.length) { rc.innerHTML='<div id="reader-empty"><div class="icon">🔍</div><p>No matches found across '+books.length+' loaded texts.</p></div>'; return; }
 
-  rc.innerHTML=results.map(r=>{
-    const snippets=r.matches.slice(0,5).map(m=>{
+  rc.innerHTML=results.map(function(r){
+    const snippetHtml=r.matches.slice(0,5).map(function(m){
       const s=Math.max(0,m.index-100), e=Math.min(r.content.length,m.index+m[0].length+100);
-      const snip=r.content.slice(s,e);
-      const hi=snip.replace(new RegExp(pattern.source,pattern.flags.replace('g','')||'g'),match=>`<mark class="hit">${esc(match)}</mark>`);
-      return `<div style="padding:5px 0;border-top:1px solid var(--border);font-size:12px;line-height:1.6;">${s>0?'…':''}${esc(snip).replace(new RegExp(escapeRe(snip),''),()=>hi)}${e<r.content.length?'…':''}</div>`;
-    });
-    // simpler snippet render
-    const snippetHtml=r.matches.slice(0,5).map(m=>{
-      const s=Math.max(0,m.index-90),e=Math.min(r.content.length,m.index+m[0].length+90);
-      const raw=r.content.slice(s,e);
+      const rawSnip=r.content.slice(s,e);
       const flags=pattern.flags.includes('g')?pattern.flags:pattern.flags+'g';
-      const hi=esc(raw).replace(new RegExp(escapeRe(esc(m[0])),flags.replace('g','')),match=>`<mark class="hit">${match}</mark>`);
-      return `<div style="padding:5px 0 4px;border-top:1px solid var(--border);font-size:11.5px;line-height:1.65;font-family:'IBM Plex Mono',monospace;">${s>0?'<span style="color:var(--muted)">…</span>':''}${hi}${e<r.content.length?'<span style="color:var(--muted)">…</span>':''}</div>`;
+      const hi=esc(rawSnip).replace(new RegExp(escapeRe(esc(m[0])),flags.replace('g','')),function(match){return '<mark class="hit">'+match+'</mark>';});
+      return '<div class="search-snippet" onclick="openInReaderAtMatch('+r.i+','+m.index+')">'
+        +(s>0?'<span style="color:var(--muted)">…</span>':'')+hi+(e<r.content.length?'<span style="color:var(--muted)">…</span>':'')
+        +'<div class="search-snippet-hint">↗ click to open in reader</div>'
+        +'</div>';
     }).join('');
-    return `<div style="margin-bottom:20px;"><div onclick="openInReader(${r.i})" style="font-family:'Playfair Display',serif;font-size:14px;font-weight:700;cursor:pointer;color:var(--gold-dim);padding-bottom:4px;">${esc(r.title)} <span style="font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--muted);font-weight:400;">${r.count} hit${r.count!==1?'s':''} · click to open</span></div>${snippetHtml}${r.matches.length>5?`<div style="font-size:10px;color:var(--muted);margin-top:3px;">…and ${r.matches.length-5} more</div>`:''}</div>`;
+    return '<div style="margin-bottom:22px;">'
+      +'<div onclick="openInReader('+r.i+')" style="font-family:Libre Franklin,sans-serif;font-size:13px;font-weight:700;cursor:pointer;color:var(--gold-dim);padding-bottom:5px;">'
+      +esc(r.title)+' <span style="font-size:10px;font-family:IBM Plex Mono,monospace;color:var(--muted);font-weight:400;">'+r.count+' hit'+(r.count!==1?'s':'')+' · open text</span></div>'
+      +snippetHtml
+      +(r.matches.length>5?'<div style="font-size:10px;color:var(--muted);margin-top:4px;">…and '+(r.matches.length-5)+' more</div>':'')
+      +'</div>';
   }).join('');
 
   searchHits=Array.from(rc.querySelectorAll('mark.hit')); updateNavBtns();
