@@ -328,6 +328,119 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
     letter-spacing: .04em; transition: background .12s;
   }
   .snippet-ai-btn:hover { background: #2a2420; }
+
+  /* ══ About Drawer ══ */
+  #about-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(20,15,10,0.55); z-index: 200;
+    backdrop-filter: blur(3px);
+  }
+  #about-overlay.open { display: block; }
+
+  #about-drawer {
+    position: fixed; top: 0; left: 0; bottom: 0;
+    width: 480px; max-width: 95vw;
+    background: var(--paper);
+    box-shadow: 4px 0 32px rgba(0,0,0,0.25);
+    display: flex; flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+    z-index: 201;
+  }
+  #about-drawer.open { transform: translateX(0); }
+
+  #about-drawer-header {
+    padding: 20px 22px 14px;
+    border-bottom: 2px solid var(--gold);
+    background: var(--ink);
+    display: flex; align-items: flex-start; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  #about-drawer-header h2 {
+    font-family: 'Libre Franklin', sans-serif;
+    font-size: 18px; font-weight: 700;
+    color: var(--gold-light); line-height: 1.3;
+  }
+  #about-drawer-header p {
+    font-size: 10px; color: #5a4e40;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: .07em; text-transform: uppercase;
+    margin-top: 3px;
+  }
+  #about-close {
+    background: none; border: none; cursor: pointer;
+    color: #5a4e40; font-size: 20px; line-height: 1;
+    transition: color .15s; padding: 2px;
+    flex-shrink: 0; margin-left: 12px;
+  }
+  #about-close:hover { color: var(--gold-light); }
+
+  #about-body {
+    flex: 1; overflow-y: auto;
+    padding: 24px 26px 32px;
+    font-size: 13px; line-height: 1.75; color: var(--ink);
+  }
+  #about-body::-webkit-scrollbar { width: 4px; }
+  #about-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  #about-body h2 {
+    font-family: 'Libre Franklin', sans-serif;
+    font-size: 16px; font-weight: 700;
+    color: var(--ink); margin: 22px 0 8px;
+    padding-bottom: 5px; border-bottom: 1px solid var(--border);
+  }
+  #about-body h2:first-child { margin-top: 0; }
+  #about-body h3 {
+    font-family: 'Libre Franklin', sans-serif;
+    font-size: 13px; font-weight: 600;
+    color: var(--ink); margin: 16px 0 6px;
+  }
+  #about-body h5 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--muted);
+    margin: 14px 0 4px;
+  }
+  #about-body p { margin-bottom: 10px; }
+  #about-body a { color: var(--gold-dim); text-decoration: none; }
+  #about-body a:hover { text-decoration: underline; }
+  #about-body ul { padding-left: 18px; margin-bottom: 10px; }
+  #about-body li { margin-bottom: 4px; }
+  #about-body code, #about-body pre {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; background: var(--cream);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 1px 5px;
+  }
+  #about-body pre {
+    padding: 10px 14px; overflow-x: auto;
+    margin: 10px 0; line-height: 1.6;
+  }
+  #about-body pre code { background: none; border: none; padding: 0; }
+  #about-body img { max-width: 100%; border-radius: 6px; margin: 10px 0; }
+  #about-body strong { font-weight: 600; }
+
+  /* About button in sidebar */
+  #about-btn {
+    background: none; border: none; cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px; color: #5a4e40;
+    letter-spacing: .07em; text-transform: uppercase;
+    padding: 0; margin-top: 4px;
+    transition: color .15s; display: inline-block;
+  }
+  #about-btn:hover { color: var(--gold-dim); }
+
+  /* ══ API Key visitor toggle ══ */
+  #api-visitor-row {
+    display: none; margin-top: 6px;
+    padding-top: 6px; border-top: 1px solid #2e2620;
+  }
+  #api-visitor-row.open { display: block; }
+  #api-visitor-note {
+    font-size: 9px; font-family: 'IBM Plex Mono', monospace;
+    color: #5a4e40; margin-bottom: 5px; line-height: 1.4;
+  }
 </style>
 </head>
 <body>
@@ -336,16 +449,22 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
 <div id="sidebar">
   <div id="sidebar-header">
     <h1>Alamut Library</h1>
-    <p>Digital Ismaili Texts</p>
+    <p>Digital Ismaili Texts &nbsp;·&nbsp; <button id="about-btn" onclick="openAbout()">About</button></p>
   </div>
 
   <div id="api-key-area">
-    <div class="sb-label">Anthropic API Key</div>
-    <div class="sb-row">
-      <input type="password" class="sb-input" id="api-key-input" placeholder="sk-ant-…">
-      <button class="sb-btn" onclick="saveApiKey()">Save</button>
+    <div class="sb-label" style="display:flex;align-items:center;justify-content:space-between;">
+      <span>API Key</span>
+      <button onclick="toggleVisitorKey()" style="background:none;border:none;cursor:pointer;font-size:9px;font-family:'IBM Plex Mono',monospace;color:#5a4e40;letter-spacing:.06em;text-transform:uppercase;" id="visitor-key-toggle">+ Use your own key</button>
     </div>
-    <div class="sb-status" id="api-key-status"></div>
+    <div id="api-visitor-row">
+      <div id="api-visitor-note">Enter your own Anthropic key to use your account instead of the library's.</div>
+      <div class="sb-row">
+        <input type="password" class="sb-input" id="api-key-input" placeholder="sk-ant-…">
+        <button class="sb-btn" onclick="saveApiKey()">Save</button>
+      </div>
+      <div class="sb-status" id="api-key-status"></div>
+    </div>
   </div>
 
   <div id="repo-area">
@@ -940,23 +1059,18 @@ function searchAllTexts(pattern) {
   rc.className='ltr';
   if (!results.length) { rc.innerHTML='<div id="reader-empty"><div class="icon">🔍</div><p>No matches found across '+books.length+' loaded texts.</p></div>'; return; }
 
-  // Reset snippet store each search
-  readerSnippets = [];
-
   rc.innerHTML=results.map(function(r){
     const snippetHtml=r.matches.slice(0,5).map(function(m){
       const s=Math.max(0,m.index-100), e=Math.min(r.content.length,m.index+m[0].length+100);
       const rawSnip=r.content.slice(s,e);
       const flags=pattern.flags.includes('g')?pattern.flags:pattern.flags+'g';
       const hi=esc(rawSnip).replace(new RegExp(escapeRe(esc(m[0])),flags.replace('g','')),function(match){return '<mark class="hit">'+match+'</mark>';});
-      // Store snippet in array, pass index to button
-      const snippetIdx = readerSnippets.length;
-      readerSnippets.push(rawSnip);
+      const snippetText = rawSnip;
       return '<div class="search-snippet" onclick="openInReaderAtMatch('+r.i+','+m.index+')">'
         +(s>0?'<span style="color:var(--muted)">…</span>':'')+hi+(e<r.content.length?'<span style="color:var(--muted)">…</span>':'')
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px;">'
         +'<div class="search-snippet-hint">↗ click to open in reader</div>'
-        +'<button class="snippet-ai-btn" onclick="event.stopPropagation();translateSnippet('+snippetIdx+')">🌐 Translate</button>'
+        +'<button class="snippet-ai-btn" onclick="event.stopPropagation();translateSnippet('+JSON.stringify(snippetText)+')">🌐 Translate</button>'
         +'</div>'
         +'</div>';
     }).join('');
@@ -1139,7 +1253,6 @@ function detectLang(text) { if(!text)return''; const ar=(text.match(/[\u0600-\u0
 // ══ READER AI POPUP ══
 let readerSelectedText = '';
 let readerAIPopup = null;
-let readerSnippets = [];
 
 // Show popup on text selection within reader
 document.addEventListener('mouseup', function(e) {
@@ -1199,23 +1312,11 @@ function readerAIAction(action) {
   runReaderAI(prompt, label);
 }
 
-function translateSnippet(idx) {
-  const raw = readerSnippets[idx];
-  if (!raw) return;
-  // Strip OpenITI markup before sending to AI
-  const clean = raw
-    .replace(/#META#[^\n]*/g, '')
-    .replace(/^##+[^\n]*/gm, '')
-    .replace(/^#+\s*/gm, '')
-    .replace(/^~~/gm, '')
-    .replace(/PageV[\dM]+P\d+/g, '')
-    .replace(/\bms\d+\b/gi, '')
-    .replace(/\|/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  if (!clean) return;
-  const prompt = 'Translate the following Arabic or Persian passage into English. Provide only the translation, then a brief note on any difficult terms:\n\n' + clean;
+function translateSnippet(text) {
+  if (!text) return;
+  const prompt = 'Translate the following Arabic or Persian passage into English. Provide only the translation, then a brief note on any difficult terms:\n\n' + text;
   runReaderAI(prompt, '🌐 Translation');
+  // Open reader panel if not open
   if (!readerOpen) toggleReader();
 }
 
@@ -1242,9 +1343,6 @@ function runReaderAI(prompt, label) {
     + 'Be concise, accurate and academically informed. '
     + (context ? context : '');
 
-  readerAIFetch(prompt, system, body, 1);
-}
-function readerAIFetch(prompt, system, body, attempt) {
   fetch(WORKER_URL + '/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
@@ -1257,32 +1355,14 @@ function readerAIFetch(prompt, system, body, attempt) {
   })
   .then(function(r){ return r.json(); })
   .then(function(data) {
-    if (data.error && data.error.message && data.error.message.toLowerCase().includes('overload') && attempt < 3) {
-      const wait = attempt * 5;
-      let remaining = wait;
-      body.innerHTML = '<div id="reader-ai-loading"><span></span><span></span><span></span>&nbsp;API busy — retrying in <span id="reader-countdown">' + remaining + '</span>s…</div>';
-      const countdown = setInterval(function() {
-        remaining--;
-        const el = document.getElementById('reader-countdown');
-        if (el) el.textContent = remaining;
-        if (remaining <= 0) clearInterval(countdown);
-      }, 1000);
-      setTimeout(function() {
-        clearInterval(countdown);
-        body.innerHTML = '<div id="reader-ai-loading"><span></span><span></span><span></span>&nbsp;Thinking…</div>';
-        readerAIFetch(prompt, system, body, attempt + 1);
-      }, wait * 1000);
-    } else {
-      const text = data.content
-        ? data.content.map(function(b){ return b.text || ''; }).join('')
-        : (data.error ? (data.error.message.includes('overload') ? 'The AI is currently busy. Please try again in a moment.' : data.error.message) : 'No response.');
-      body.innerHTML = formatReaderAIResponse(text);
-    }
+    const text = data.content ? data.content.map(function(b){return b.text||'';}).join('') : (data.error ? data.error.message : 'No response.');
+    body.innerHTML = formatReaderAIResponse(text);
   })
   .catch(function(err) {
     body.innerHTML = '<p style="color:var(--error)">Error: ' + esc(err.message) + '</p>';
   });
 }
+
 function formatReaderAIResponse(text) {
   return text
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -1296,6 +1376,29 @@ function closeReaderAI() {
   document.getElementById('reader-ai-response').classList.remove('open');
 }
 
+
+// ══ ABOUT DRAWER ══
+function openAbout() {
+  document.getElementById('about-overlay').classList.add('open');
+  document.getElementById('about-drawer').classList.add('open');
+}
+function closeAbout() {
+  document.getElementById('about-overlay').classList.remove('open');
+  document.getElementById('about-drawer').classList.remove('open');
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeAbout();
+});
+
+// ══ VISITOR API KEY TOGGLE ══
+function toggleVisitorKey() {
+  const row = document.getElementById('api-visitor-row');
+  const btn = document.getElementById('visitor-key-toggle');
+  const open = row.classList.toggle('open');
+  btn.textContent = open ? '− Hide' : '+ Use your own key';
+  if (open) document.getElementById('api-key-input').focus();
+}
+
 // ══ FILE READER fix (FileReader needs correct usage) ══
 (function patchReadFile(){
   window.readFile=function(file){
@@ -1306,5 +1409,54 @@ function closeReaderAI() {
   };
 })();
 </script>
+
+<!-- ══ ABOUT DRAWER ══ -->
+<div id="about-overlay" onclick="closeAbout()"></div>
+<div id="about-drawer">
+  <div id="about-drawer-header">
+    <div>
+      <h2>Alamut Library</h2>
+      <p>Digital Ismaili Texts v.2.0</p>
+    </div>
+    <button id="about-close" onclick="closeAbout()" title="Close">✕</button>
+  </div>
+  <div id="about-body">
+    <h2>Introduction</h2>
+    <p>DigIT.2.0 is the second iteration of the bilingual corpus of Arabic and Persian texts, which will form the basis of a larger multilingual corpus of Ismaili texts. The corpus can be accessed and interacted with through the Alamut Library, a web application with search and AI chat functions.</p>
+    <p>The corpus is created and maintained by <strong>Aslisho Qurboniev</strong>, a researcher at the <strong>Institute of Ismaili Studies</strong>. The texts come from a variety of sources, such as from the OpenITI, but many will be digitised for the first time, including from manuscripts. The corpus follows the OpenITI standards and draws upon the tools created by the OpenITI and KITAB team.</p>
+    <p>The Corpus is still being developed, and new texts will be added as they become available. Your contribution will be welcome.</p>
+    <p><strong>Note:</strong> This repository is currently private. You are free to use the texts in any way you wish, but please do not redistribute them without permission.</p>
+
+    <h2>The Corpus</h2>
+    <p>The corpus contains texts in plain <a href="https://kitab-project.org/corpus/markdown" target="_blank">mARkdown</a> format, organised into folders by author. Further details can be found on the <a href="https://kitab-project.org/docs/openITI" target="_blank">KITAB website</a>.</p>
+
+    <h3>How to use the corpus</h3>
+    <p>The textual files are in plain text format. To work with them productively, download the files and open them in a text editor such as Kate Editor or EditPadPro.</p>
+    <p>Start with the documentation on the KITAB project website:
+      <a href="https://kitab-project.org/corpus/use" target="_blank">How to use the Corpus</a> ·
+      <a href="https://kitab-project.org/corpus/use#uri-structure" target="_blank">URI structure</a> ·
+      <a href="https://kitab-project.org/corpus/use#metadata-files" target="_blank">Metadata files</a>
+    </p>
+
+    <h3>Understanding the URIs</h3>
+    <p>Each text has a Unique Resource Identifier (URI) consisting of Author ID, Book ID, and version (edition) ID.</p>
+    <h5>Author ID – Book ID – Version ID – extension</h5>
+    <pre><code>0363QadiNucman.IkhtilafUsulMadhahib.EScr20110913-ara1.txt
+0346JacfarBinMansurYaman.TawilZakat.Kraken220315161331-ara1.txt
+0481NasirKhusraw.Safarnama.Ganjoor-per1.txt
+0721NizariQuhistani.Safarnama.Ganjoor-per1.txt</code></pre>
+    <p>For full details see the <a href="https://kitab-project.org/docs/openITI#uris--cts-like-folder-structure" target="_blank">OpenITI URI documentation</a>.</p>
+
+    <h3>Technical support and tools</h3>
+    <ul>
+      <li><a href="https://kitab-project.org/docs/openITI#getting-started-with-github" target="_blank">Installing and working with GitHub and GitBash</a></li>
+      <li><a href="https://kitab-project.org/docs/openITI#5-software-versions-and-installation" target="_blank">Recommended software for working with text files</a></li>
+      <li><a href="https://kitab-project.org/docs/openITI#5-software-versions-and-installation" target="_blank">Annotating texts</a></li>
+    </ul>
+
+    <h2>Corpus Preview</h2>
+    <img src="https://raw.githubusercontent.com/AlamutLibrary/DigIT.2.0/master/images/corpus.png" alt="Corpus overview">
+  </div>
+</div>
 </body>
 </html>
