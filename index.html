@@ -946,12 +946,14 @@ function searchAllTexts(pattern) {
       const rawSnip=r.content.slice(s,e);
       const flags=pattern.flags.includes('g')?pattern.flags:pattern.flags+'g';
       const hi=esc(rawSnip).replace(new RegExp(escapeRe(esc(m[0])),flags.replace('g','')),function(match){return '<mark class="hit">'+match+'</mark>';});
-      const snippetText = rawSnip;
+     // Store snippet text safely in a global map, keyed by index
+     const snippetKey = 'snip_' + r.i + '_' + m.index;
+      readerSnippets[snippetKey] = rawSnip;
       return '<div class="search-snippet" onclick="openInReaderAtMatch('+r.i+','+m.index+')">'
         +(s>0?'<span style="color:var(--muted)">…</span>':'')+hi+(e<r.content.length?'<span style="color:var(--muted)">…</span>':'')
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px;">'
         +'<div class="search-snippet-hint">↗ click to open in reader</div>'
-        +'<button class="snippet-ai-btn" onclick="event.stopPropagation();translateSnippet('+JSON.stringify(snippetText)+')">🌐 Translate</button>'
+        +'<button class="snippet-ai-btn" onclick="event.stopPropagation();translateSnippet(\''+snippetKey+'\')">🌐 Translate</button>'
         +'</div>'
         +'</div>';
     }).join('');
