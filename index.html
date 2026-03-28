@@ -441,6 +441,24 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
     font-size: 9px; font-family: 'IBM Plex Mono', monospace;
     color: #5a4e40; margin-bottom: 5px; line-height: 1.4;
   }
+
+  /* ══ Provider Selector ══ */
+  #provider-select {
+    width: 100%; padding: 5px 7px; margin-top: 5px;
+    background: #1e1810; border: 1px solid #3a3028;
+    border-radius: 4px; font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: #b0a090; outline: none; cursor: pointer;
+    transition: border-color .15s;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236a5e50'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 8px center; padding-right: 24px;
+  }
+  #provider-select:focus { border-color: var(--gold-dim); }
+  #provider-select option { background: #1e1810; color: #b0a090; }
+  .provider-hint { font-size: 9px; font-family: 'IBM Plex Mono', monospace; color: #4a3e40; margin-top: 3px; line-height: 1.4; }
+  .provider-hint a { color: var(--gold-dim); text-decoration: none; }
+  .provider-hint a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -661,10 +679,64 @@ window.onload = () => {
 };
 
 // ══ API KEY ══
+// ── PROVIDER STATE ──
+let activeProvider = 'anthropic';
+
+const PROVIDER_INFO = {
+  'anthropic':     { name: 'Anthropic Claude',  model: 'claude-sonnet-4-20250514', placeholder: 'sk-ant-…',  link: 'https://console.anthropic.com/settings/keys' },
+  'anthropic-own': { name: 'Anthropic Claude',  model: 'claude-sonnet-4-20250514', placeholder: 'sk-ant-…',  link: 'https://console.anthropic.com/settings/keys' },
+  'openai':        { name: 'OpenAI GPT-4o',      model: 'gpt-4o',                  placeholder: 'sk-proj-…', link: 'https://platform.openai.com/api-keys' },
+  'gemini':        { name: 'Google Gemini',       model: 'gemini-1.5-pro',          placeholder: 'AIza…',     link: 'https://aistudio.google.com/app/apikey' },
+  'mistral':       { name: 'Mistral Large',       model: 'mistral-large-latest',    placeholder: 'your key…', link: 'https://console.mistral.ai/api-keys' },
+  'deepseek':      { name: 'DeepSeek Chat',       model: 'deepseek-chat',           placeholder: 'sk-…',      link: 'https://platform.deepseek.com/api_keys' },
+};
+
+function onProviderChange() {
+  const sel  = document.getElementById('provider-select').value;
+  activeProvider = sel;
+  const row  = document.getElementById('api-visitor-row');
+  const info = PROVIDER_INFO[sel];
+  if (sel === 'anthropic') {
+    row.classList.remove('open');
+    document.getElementById('visitor-key-toggle').textContent = '+ Use your own key';
+  } else {
+    row.classList.add('open');
+    document.getElementById('api-key-input').placeholder = info.placeholder;
+    document.getElementById('api-key-input').value = '';
+    document.getElementById('api-key-status').textContent = '';
+    document.getElementById('api-visitor-note').innerHTML =
+      'Get a free key at <a href="' + info.link + '" target="_blank">' + info.link.replace('https://','') + '</a>';
+    document.getElementById('visitor-key-toggle').textContent = '− Hide';
+    const saved = sessionStorage.getItem('al_key_' + sel);
+    if (saved) {
+      document.getElementById('api-key-input').value = saved;
+      setStatus('api-key-status', '✓ Key loaded', 'ok');
+    }
+    document.getElementById('api-key-input').focus();
+  }
+  apiKey = sessionStorage.getItem('al_key_' + sel) || '';
+  refreshUI();
+}
+
+function autoDetectProvider(key) {
+  if (!key || key.length < 8) return;
+  let detected = null;
+  if (key.startsWith('sk-ant-'))                                      detected = 'anthropic-own';
+  else if (key.startsWith('AIza'))                                    detected = 'gemini';
+  else if (key.startsWith('sk-proj-') || (key.startsWith('sk-') && key.length > 40 && !key.startsWith('sk-ant'))) detected = 'openai';
+  else if (key.length >= 32)                                          detected = 'mistral';
+  if (detected && detected !== activeProvider) {
+    document.getElementById('provider-select').value = detected;
+    onProviderChange();
+    document.getElementById('api-key-input').value = key;
+  }
+}
+
 function saveApiKey() {
   const v = document.getElementById('api-key-input').value.trim();
-  if (!v.startsWith('sk-')) { setStatus('api-key-status','⚠ Invalid key format','err'); return; }
-  apiKey = v; sessionStorage.setItem('al_api_key', v);
+  if (!v || v.length < 10) { setStatus('api-key-status','⚠ Key too short','err'); return; }
+  apiKey = v;
+  sessionStorage.setItem('al_key_' + activeProvider, v);
   setStatus('api-key-status','✓ Saved for this session','ok');
   refreshUI();
 }
@@ -772,23 +844,26 @@ function updateChatHeader() {
 }
 
 function updateNotices() {
-  const hasWorker = !!WORKER_URL;
-  const hasKey    = !!(apiKey || WORKER_URL);
-  const hasTexts  = books.length > 0;
-  // Show worker-not-configured warning prominently
+  const hasWorker  = !!WORKER_URL;
+  const usingOwn   = activeProvider !== 'anthropic';
+  const hasOwnKey  = usingOwn && !!apiKey;
+  const canChat    = hasWorker && (!usingOwn || hasOwnKey);
+  const hasTexts   = books.length > 0;
   const keyNotice  = document.getElementById('no-key-notice');
   const textNotice = document.getElementById('no-text-notice');
   if (!hasWorker) {
     keyNotice.style.display = 'block';
-    keyNotice.innerHTML = '⚙ <strong>Cloudflare Worker required.</strong> Browsers cannot call the Anthropic API directly (CORS). ' +
-      'Deploy <code>worker.js</code> then set <code>WORKER_URL</code> in <code>index.html</code>. ' +
-      'See <strong>README.md</strong> for full instructions.';
+    keyNotice.innerHTML = '⚙ <strong>Cloudflare Worker required.</strong> Deploy worker.js and set WORKER_URL in index.html.';
     keyNotice.style.cssText = 'display:block;padding:8px 14px;background:#fff3cd;border:1px solid #ffc107;border-radius:6px;font-size:11px;line-height:1.5;color:#856404;margin-bottom:6px;';
+  } else if (usingOwn && !hasOwnKey) {
+    keyNotice.style.display = 'block';
+    keyNotice.innerHTML = '⚠ Enter your ' + (PROVIDER_INFO[activeProvider]||{name:'provider'}).name + ' API key above to chat.';
+    keyNotice.style.cssText = 'display:block;padding:6px 14px;background:#fff3cd;border:1px solid #ffc107;border-radius:6px;font-size:11px;color:#856404;margin-bottom:6px;';
   } else {
     keyNotice.style.display = 'none';
   }
-  textNotice.style.display = (hasWorker && !hasTexts) ? 'block' : 'none';
-  document.getElementById('send-btn').disabled = !hasWorker || !hasTexts;
+  textNotice.style.display = (canChat && !hasTexts) ? 'block' : 'none';
+  document.getElementById('send-btn').disabled = !canChat || !hasTexts;
 }
 
 function renderMetaPanel() {
@@ -1312,14 +1387,10 @@ function findRelevantPassages(text,kw,maxP,wSize) {
 }
 async function callClaude(userText, context) {
   if (!WORKER_URL) {
-    throw new Error(
-      'Cloudflare Worker not configured. Browsers cannot call the Anthropic API directly ' +
-      'due to CORS restrictions. Please deploy worker.js and set WORKER_URL in index.html. ' +
-      'See the README.md for step-by-step instructions.'
-    );
+    throw new Error('Cloudflare Worker not configured. Please deploy worker.js and set WORKER_URL in index.html.');
   }
   const isAllMode = activeScope === 'all';
-  const system = 'You are a scholarly assistant for the Alamut Library, a Digital Library of Ismaili Texts ' +
+  const systemPrompt = 'You are a scholarly assistant for the Alamut Library, a Digital Library of Ismaili Texts ' +
     'specialising in Arabic and Persian Ismaili literature, theology, philosophy, and poetry.\n\n' +
     (isAllMode
       ? 'The library contains ' + books.length + ' texts. You have been provided with the most relevant passages ' +
@@ -1335,7 +1406,9 @@ async function callClaude(userText, context) {
     '- Maintain an academic but accessible tone; respond in English unless asked otherwise\n\n' +
     (context ? 'TEXT CONTEXT:\n' + context : 'No text context provided.');
 
-  const apiMsgs = [
+  const provider = activeProvider || 'anthropic';
+  const info     = PROVIDER_INFO[provider] || PROVIDER_INFO['anthropic'];
+  const apiMsgs  = [
     ...messages.slice(-8).map(m => ({ role: m.role, content: m.content })),
     { role: 'user', content: userText }
   ];
@@ -1344,21 +1417,25 @@ async function callClaude(userText, context) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-API-Key': apiKey   // Worker uses Cloudflare secret first; this is the fallback
+      'X-API-Key':  apiKey,
+      'X-Provider': provider,
+      'X-Model':    info.model,
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model:      info.model,
       max_tokens: 1000,
-      system: system,
-      messages: apiMsgs
+      system:     systemPrompt,
+      messages:   apiMsgs
     })
   });
   if (!res.ok) {
     const e = await res.json().catch(() => ({}));
-    throw new Error(e.error ? e.error.message : 'HTTP ' + res.status);
+    throw new Error(e.error ? (e.error.message || JSON.stringify(e.error)) : 'HTTP ' + res.status);
   }
   const data = await res.json();
-  return data.content.map(function(b) { return b.text || ''; }).join('');
+  return data.content
+    ? data.content.map(function(b){ return b.text || ''; }).join('')
+    : (data.choices ? data.choices[0].message.content : 'No response');
 }
 
 // ══ DRAG RESIZERS ══
@@ -1493,14 +1570,21 @@ function runReaderAI(prompt, label) {
     + 'Be concise, accurate and academically informed. '
     + (context ? context : '');
 
+  const rProvider = activeProvider || 'anthropic';
+  const rInfo     = PROVIDER_INFO[rProvider] || PROVIDER_INFO['anthropic'];
   fetch(WORKER_URL + '/v1/messages', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key':  apiKey,
+      'X-Provider': rProvider,
+      'X-Model':    rInfo.model,
+    },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model:      rInfo.model,
       max_tokens: 600,
-      system: system,
-      messages: [{ role: 'user', content: prompt }]
+      system:     system,
+      messages:   [{ role: 'user', content: prompt }]
     })
   })
   .then(function(r){ return r.json(); })
@@ -1542,11 +1626,17 @@ document.addEventListener('keydown', function(e) {
 
 // ══ VISITOR API KEY TOGGLE ══
 function toggleVisitorKey() {
-  const row = document.getElementById('api-visitor-row');
-  const btn = document.getElementById('visitor-key-toggle');
-  const open = row.classList.toggle('open');
-  btn.textContent = open ? '− Hide' : '+ Use your own key';
-  if (open) document.getElementById('api-key-input').focus();
+  const sel = document.getElementById('provider-select');
+  if (sel.value === 'anthropic') {
+    sel.value = 'anthropic-own';
+    onProviderChange();
+  } else {
+    const row = document.getElementById('api-visitor-row');
+    const btn = document.getElementById('visitor-key-toggle');
+    const open = row.classList.toggle('open');
+    btn.textContent = open ? '− Hide' : '+ Use your own key';
+    if (open) document.getElementById('api-key-input').focus();
+  }
 }
 
 // ══ FILE READER fix (FileReader needs correct usage) ══
