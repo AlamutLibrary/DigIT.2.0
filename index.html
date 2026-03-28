@@ -472,13 +472,21 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
 
   <div id="api-key-area">
     <div class="sb-label" style="display:flex;align-items:center;justify-content:space-between;">
-      <span>API Key</span>
+      <span>AI Provider</span>
       <button onclick="toggleVisitorKey()" style="background:none;border:none;cursor:pointer;font-size:9px;font-family:'IBM Plex Mono',monospace;color:#5a4e40;letter-spacing:.06em;text-transform:uppercase;" id="visitor-key-toggle">+ Use your own key</button>
     </div>
+    <select id="provider-select" onchange="onProviderChange()">
+      <option value="anthropic">🔶 Anthropic Claude (library key)</option>
+      <option value="anthropic-own">🔶 Anthropic Claude (your key)</option>
+      <option value="openai">🟢 OpenAI GPT-4o</option>
+      <option value="gemini">🔵 Google Gemini 1.5 Pro</option>
+      <option value="mistral">🟠 Mistral Large</option>
+      <option value="deepseek">⚫ DeepSeek Chat</option>
+    </select>
     <div id="api-visitor-row">
-      <div id="api-visitor-note">Enter your own Anthropic key to use your account instead of the library's.</div>
-      <div class="sb-row">
-        <input type="password" class="sb-input" id="api-key-input" placeholder="sk-ant-…">
+      <div id="api-visitor-note" class="provider-hint">Enter your API key below. <span id="provider-link"></span></div>
+      <div class="sb-row" style="margin-top:5px;">
+        <input type="password" class="sb-input" id="api-key-input" placeholder="Paste your API key…" oninput="autoDetectProvider(this.value)">
         <button class="sb-btn" onclick="saveApiKey()">Save</button>
       </div>
       <div class="sb-status" id="api-key-status"></div>
@@ -1627,12 +1635,14 @@ document.addEventListener('keydown', function(e) {
 // ══ VISITOR API KEY TOGGLE ══
 function toggleVisitorKey() {
   const sel = document.getElementById('provider-select');
+  if (!sel) return; // guard against missing element
   if (sel.value === 'anthropic') {
     sel.value = 'anthropic-own';
     onProviderChange();
   } else {
     const row = document.getElementById('api-visitor-row');
     const btn = document.getElementById('visitor-key-toggle');
+    if (!row || !btn) return;
     const open = row.classList.toggle('open');
     btn.textContent = open ? '− Hide' : '+ Use your own key';
     if (open) document.getElementById('api-key-input').focus();
