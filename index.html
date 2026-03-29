@@ -4,545 +4,232 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alamut Library — Digital Ismaili Texts</title>
-<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,300;0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
 <style>
-/* ── TOKENS ── */
-:root {
-  --ink: #1a1410;
-  --paper: #f5f0e8;
-  --cream: #ede7d9;
-  --gold: #b8860b;
-  --gold-light: #d4a017;
-  --gold-dim: #7a5a08;
-  --muted: #7a6e5f;
-  --border: #cfc4b0;
-  --error: #c0392b;
-  --hit-bg: #ffe082;
-  --hit-active: #ff9800;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'IBM Plex Sans', sans-serif; background: var(--paper); color: var(--ink); height: 100vh; display: flex; overflow: hidden; }
-
-/* ══ LEFT SIDEBAR ══ */
-#sidebar {
-  width: 280px; min-width: 200px; max-width: 380px;
-  background: var(--ink); color: var(--paper);
-  display: flex; flex-direction: column; overflow: hidden;
-}
-#sidebar-header { padding: 18px 16px 12px; border-bottom: 1px solid #2e2620; flex-shrink: 0; }
-#sidebar-header h1 { font-family: 'Libre Franklin', sans-serif; font-size: 17px; font-weight: 700; color: var(--gold-light); line-height: 1.3; }
-#sidebar-header p  { font-size: 9px; color: #5a4e40; margin-top: 2px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.07em; text-transform: uppercase; }
-
-/* api key */
-#api-key-area { padding: 9px 13px; border-bottom: 1px solid #2e2620; background: #120e0a; flex-shrink: 0; }
-.sb-label { font-size: 9px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.1em; text-transform: uppercase; color: #4a3e30; margin-bottom: 4px; }
-.sb-row   { display: flex; gap: 5px; }
-.sb-input { flex: 1; padding: 5px 7px; background: #1e1810; border: 1px solid #3a3028; border-radius: 4px; font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: #b0a090; outline: none; min-width: 0; }
-.sb-input:focus { border-color: var(--gold-dim); }
-.sb-input::placeholder { color: #3a3028; }
-.sb-btn { padding: 5px 9px; background: var(--gold-dim); border: none; border-radius: 4px; font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: var(--gold-light); cursor: pointer; white-space: nowrap; transition: background .15s; }
-.sb-btn:hover { background: var(--gold); color: #fff; }
-.sb-btn.ghost { background: #2a2420; border: 1px solid #3a3028; color: #b0a090; }
-.sb-btn.ghost:hover { border-color: var(--gold-dim); color: var(--gold-light); background: #2a2420; }
-.sb-status { font-size: 9px; font-family: 'IBM Plex Mono', monospace; margin-top: 3px; color: #4a3e30; }
-.sb-status.ok  { color: #4a9a5a; }
-.sb-status.err { color: var(--error); }
-.sb-status.loading { color: var(--gold-dim); }
-
-/* repo */
-#repo-area { padding: 9px 13px; border-bottom: 1px solid #2e2620; flex-shrink: 0; }
-
-/* scope */
-#library-scope { padding: 8px 12px; border-bottom: 1px solid #2e2620; flex-shrink: 0; }
-#scope-all { display: flex; align-items: center; gap: 7px; padding: 6px 9px; border-radius: 5px; cursor: pointer; font-size: 10px; color: #b0a090; transition: all .15s; letter-spacing: .03em; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; border: 1px solid transparent; }
-#scope-all:hover  { color: var(--gold-light); background: #2a2420; }
-#scope-all.active { color: var(--gold-light); background: #2a2420; border-color: var(--gold-dim); }
-#scope-all .dot   { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
-
-/* book list */
-#books-list { flex: 1; overflow-y: auto; padding: 6px 9px; }
-#books-list::-webkit-scrollbar { width: 3px; }
-#books-list::-webkit-scrollbar-thumb { background: #3a3028; border-radius: 2px; }
-.section-label { font-size: 9px; color: #3a3028; letter-spacing: .12em; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; padding: 7px 7px 3px; }
-.book-item { display: flex; align-items: flex-start; gap: 7px; padding: 7px 9px; border-radius: 5px; cursor: pointer; margin-bottom: 2px; transition: all .15s; border: 1px solid transparent; }
-.book-item:hover  { background: #2a2420; }
-.book-item.active { background: #2a2420; border-color: var(--gold-dim); }
-.book-icon  { font-size: 12px; flex-shrink: 0; margin-top: 1px; }
-.book-meta  { flex: 1; min-width: 0; }
-.book-title  { font-size: 11px; font-weight: 500; color: var(--paper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.book-author { font-size: 9px; color: #6a5e50; font-family: 'IBM Plex Mono', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.book-tags   { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 2px; }
-.tag { font-size: 8px; padding: 1px 4px; border-radius: 3px; background: #2e2620; color: #6a5e50; font-family: 'IBM Plex Mono', monospace; }
-.tag.ar { color: #c8a060; background: #2e2010; }
-.tag.fa { color: #80a0c8; background: #10203e; }
-
-/* upload */
-#upload-section { padding: 9px 13px; border-top: 1px solid #2e2620; flex-shrink: 0; }
-#upload-toggle { font-size: 9px; font-family: 'IBM Plex Mono', monospace; color: #4a3e30; cursor: pointer; letter-spacing: .06em; text-transform: uppercase; display: flex; align-items: center; gap: 5px; transition: color .15s; }
-#upload-toggle:hover { color: var(--gold-dim); }
-#upload-panel { display: none; margin-top: 9px; }
-#upload-panel.open { display: block; }
-#upload-zone { border: 1.5px dashed #3a3028; border-radius: 5px; padding: 10px; text-align: center; cursor: pointer; font-size: 10px; color: #4a3e30; font-family: 'IBM Plex Mono', monospace; transition: all .15s; }
-#upload-zone:hover, #upload-zone.drag { border-color: var(--gold-dim); color: var(--gold-dim); }
-#file-in { display: none; }
-#upload-name { font-size: 9px; color: var(--gold-dim); margin-top: 4px; font-family: 'IBM Plex Mono', monospace; display: none; }
-#paste-area { width: 100%; height: 70px; padding: 6px 7px; background: #1e1810; border: 1px solid #3a3028; border-radius: 4px; font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: #b0a090; resize: none; outline: none; margin-top: 5px; }
-#paste-area:focus { border-color: var(--gold-dim); }
-#paste-area::placeholder { color: #3a3028; }
-#add-text-btn { width: 100%; margin-top: 6px; padding: 6px; background: var(--gold-dim); border: none; border-radius: 4px; font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: var(--gold-light); cursor: pointer; transition: background .15s; }
-#add-text-btn:hover { background: var(--gold); color: #fff; }
-
-/* ══ DRAG RESIZER ══ */
-.resizer { width: 5px; background: #2e2620; cursor: col-resize; flex-shrink: 0; transition: background .15s; z-index: 20; }
-.resizer:hover, .resizer.dragging { background: var(--gold-dim); }
-
-/* ══ CHAT PANEL ══ */
-#chat-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 300px; }
-
-/* header */
-#chat-header { padding: 12px 18px; border-bottom: 1px solid var(--border); background: var(--paper); display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
-#chat-header-icon { font-size: 17px; }
-#chat-header-info { flex: 1; min-width: 0; }
-#chat-header-title { font-family: 'Libre Franklin', sans-serif; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#chat-header-meta  { font-size: 10px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
-
-#mode-toggle { display: flex; gap: 2px; background: var(--cream); border: 1px solid var(--border); border-radius: 6px; padding: 2px; }
-.mode-btn { padding: 3px 8px; border: none; border-radius: 4px; background: none; font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: var(--muted); cursor: pointer; transition: all .15s; white-space: nowrap; }
-.mode-btn.active { background: var(--ink); color: var(--gold-light); }
-
-#open-reader-btn { padding: 4px 9px; background: var(--cream); border: 1px solid var(--border); border-radius: 5px; font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: var(--muted); cursor: pointer; white-space: nowrap; transition: all .15s; }
-#open-reader-btn:hover  { border-color: var(--gold); color: var(--gold-dim); }
-#open-reader-btn.active { background: var(--ink); color: var(--gold-light); border-color: var(--gold-dim); }
-
-/* metadata strip */
-#meta-panel { display: none; padding: 10px 16px; background: var(--cream); border-bottom: 1px solid var(--border); flex-shrink: 0; }
-#meta-panel.open { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 7px; }
-.meta-item { display: flex; flex-direction: column; gap: 1px; }
-.meta-key  { font-size: 8px; font-family: 'IBM Plex Mono', monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-.meta-val  { font-size: 11px; font-weight: 500; }
-
-/* messages */
-#messages-wrap { flex: 1; overflow-y: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 15px; }
-#messages-wrap::-webkit-scrollbar { width: 4px; }
-#messages-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-.msg { display: flex; flex-direction: column; gap: 3px; animation: fadeUp .2s ease; }
-@keyframes fadeUp { from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);} }
-.msg.user      { align-self: flex-end; align-items: flex-end; }
-.msg.assistant { align-self: flex-start; align-items: flex-start; }
-.msg-label  { font-size: 9px; letter-spacing: .08em; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; color: var(--muted); }
-.msg-bubble { padding: 10px 13px; border-radius: 10px; font-size: 13px; line-height: 1.75; max-width: min(560px, 92%); }
-.msg.user      .msg-bubble { background: var(--ink); color: var(--paper); border-bottom-right-radius: 3px; }
-.msg.assistant .msg-bubble { background: var(--cream); color: var(--ink); border: 1px solid var(--border); border-bottom-left-radius: 3px; }
-.msg.assistant .msg-bubble p { margin-bottom: 8px; }
-.msg.assistant .msg-bubble p:last-child { margin-bottom: 0; }
-.msg.assistant .msg-bubble strong { color: var(--gold-dim); }
-.rtl-passage { direction: rtl; font-family: 'Amiri', serif; font-size: 16px; line-height: 2.1; background: #e8e0d0; border-right: 3px solid var(--gold); padding: 8px 12px; border-radius: 6px; margin: 6px 0; }
-
-/* empty */
-#empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 9px; color: var(--muted); padding: 30px; }
-#empty-state .big-icon { font-size: 42px; }
-#empty-state h2 { font-family: 'Libre Franklin', sans-serif; font-size: 19px; font-style: italic; color: var(--ink); }
-#empty-state p  { font-size: 12px; max-width: 320px; line-height: 1.6; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 6px; }
-.chip { padding: 5px 12px; background: var(--cream); border: 1px solid var(--border); border-radius: 20px; font-size: 11px; cursor: pointer; transition: all .15s; }
-.chip:hover { border-color: var(--gold); background: #e8d8b0; }
-
-/* typing */
-#typing { display: none; align-self: flex-start; align-items: center; gap: 4px; padding: 8px 12px; background: var(--cream); border: 1px solid var(--border); border-radius: 10px; border-bottom-left-radius: 3px; animation: fadeUp .2s ease; }
-#typing span { width: 5px; height: 5px; background: var(--muted); border-radius: 50%; animation: bounce 1.2s infinite; }
-#typing span:nth-child(2) { animation-delay: .2s; }
-#typing span:nth-child(3) { animation-delay: .4s; }
-@keyframes bounce { 0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-5px);} }
-
-/* input */
-#input-area { padding: 11px 18px 15px; border-top: 1px solid var(--border); flex-shrink: 0; }
-.notice { text-align: center; font-size: 11px; padding: 4px; }
-.notice.warn { color: var(--error); }
-.notice.info { color: var(--muted); font-style: italic; }
-#input-row { display: flex; gap: 7px; align-items: flex-end; }
-#chat-input { flex: 1; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'IBM Plex Sans', sans-serif; background: #faf7f2; color: var(--ink); resize: none; outline: none; max-height: 110px; min-height: 40px; line-height: 1.5; transition: border-color .15s; }
-#chat-input:focus { border-color: var(--gold); }
-#chat-input::placeholder { color: #b0a090; }
-#send-btn { width: 40px; height: 40px; border-radius: 8px; background: var(--gold); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s, transform .1s; flex-shrink: 0; }
-#send-btn:hover   { background: var(--gold-light); }
-#send-btn:active  { transform: scale(.95); }
-#send-btn:disabled { background: var(--border); cursor: not-allowed; }
-#send-btn svg { fill: white; width: 15px; height: 15px; }
-
-/* ══ RIGHT READER PANEL ══ */
-#reader-panel {
-  width: 420px; min-width: 260px; max-width: 700px;
-  display: none; flex-direction: column; overflow: hidden;
-  border-left: 1px solid var(--border); background: #faf8f3;
-}
-#reader-panel.open { display: flex; }
-
-/* search bar */
-#search-bar { padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--cream); flex-shrink: 0; }
-#search-bar-title { font-size: 9px; font-family: 'IBM Plex Mono', monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
-#search-scope-lbl { font-size: 9px; color: #b0a090; font-weight: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
-#search-row  { display: flex; gap: 5px; }
-#search-input { flex: 1; padding: 6px 9px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 12px; font-family: 'IBM Plex Mono', monospace; background: #faf7f2; color: var(--ink); outline: none; transition: border-color .15s; min-width: 0; }
-#search-input:focus   { border-color: var(--gold); }
-#search-input.invalid { border-color: var(--error); background: #fff5f5; }
-#search-input::placeholder { color: #b0a090; }
-#search-opts { display: flex; gap: 4px; align-items: center; margin-top: 6px; flex-wrap: wrap; }
-.search-toggle { display: flex; align-items: center; gap: 3px; font-size: 9px; font-family: 'IBM Plex Mono', monospace; color: var(--muted); cursor: pointer; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); background: #faf7f2; transition: all .15s; user-select: none; letter-spacing: .04em; }
-.search-toggle:hover  { border-color: var(--gold-dim); color: var(--ink); }
-.search-toggle.on     { border-color: var(--gold); background: var(--gold-dim); color: #fff; }
-.search-toggle input  { display: none; }
-#search-status { font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: var(--muted); margin-top: 5px; display: flex; align-items: center; justify-content: space-between; min-height: 20px; }
-#search-nav { display: flex; gap: 3px; }
-.nav-btn { padding: 1px 7px; border: 1px solid var(--border); border-radius: 4px; background: none; cursor: pointer; font-size: 11px; color: var(--muted); transition: all .15s; }
-.nav-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold-dim); }
-.nav-btn:disabled { opacity: .35; cursor: not-allowed; }
-
-/* reader book header */
-#reader-header { padding: 12px 16px 8px; border-bottom: 1px solid var(--border); background: var(--paper); flex-shrink: 0; }
-#reader-book-title  { font-family: 'Libre Franklin', sans-serif; font-size: 15px; font-weight: 700; line-height: 1.3; }
-#reader-book-author { font-size: 10px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; margin-top: 2px; }
-
-/* reader content */
-#reader-content { flex: 1; overflow-y: auto; padding: 20px 22px; }
-#reader-content::-webkit-scrollbar { width: 4px; }
-#reader-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-#reader-content.rtl { direction: rtl; text-align: right; font-family: 'Amiri', serif; font-size: 19px; line-height: 2.3; }
-#reader-content.ltr { direction: ltr; text-align: left; font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1.75; }
-#reader-content p   { margin-bottom: 1.2em; }
-
-/* highlights */
-mark.hit        { background: var(--hit-bg); border-radius: 2px; padding: 0 1px; color: inherit; }
-mark.hit.active { background: var(--hit-active); color: #fff; }
-
-/* empty reader */
-#reader-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; color: var(--muted); padding: 40px 24px; height: 100%; }
-#reader-empty .icon { font-size: 36px; }
-#reader-empty p { font-size: 12px; max-width: 260px; line-height: 1.6; }
-
-  /* ══ OpenITI mARkdown rendered styles ══ */
-  .oiti-page  { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:9px; color:#fff;
-                background:var(--gold-dim); border-radius:3px; padding:1px 5px; margin:0 3px;
-                letter-spacing:.04em; vertical-align:middle; }
-  .oiti-head1 { font-family:'Libre Franklin',sans-serif; font-size:20px; font-weight:700;
-                color:var(--ink); margin:24px 0 10px; padding-bottom:6px;
-                border-bottom:2px solid var(--gold); line-height:1.3; }
-  .oiti-head2 { font-family:'Libre Franklin',sans-serif; font-size:16px; font-weight:600;
-                color:var(--ink); margin:18px 0 8px; line-height:1.3; }
-  .oiti-head3 { font-family:'Libre Franklin',sans-serif; font-size:14px; font-weight:600;
-                color:var(--muted); margin:14px 0 6px; line-height:1.3; }
-  .oiti-para  { margin-bottom:1em; }
-  .oiti-poetry { margin:12px 0; padding:10px 16px; background:var(--cream);
-                 border-right:3px solid var(--gold); border-radius:4px; }
-  .oiti-bayt  { display:flex; align-items:baseline; justify-content:center;
-                gap:0; margin:2px 0; padding:4px 0;
-                border-bottom:1px dotted var(--border); direction:rtl; }
-  .oiti-bayt .s1 { flex:1; text-align:right; }
-  .oiti-bayt .s2 { flex:1; text-align:right; }
-  .oiti-bayt .bayt-sep { flex-shrink:0; padding:0 14px; color:var(--gold);
-                         font-size:18px; line-height:1; user-select:none; }
-  .oiti-ms    { font-size:10px; color:#b0a090; font-family:'IBM Plex Mono',monospace;
-                display:block; margin:14px 0 4px; letter-spacing:.04em; }
-  #reader-content.rtl .oiti-head1,
-  #reader-content.rtl .oiti-head2,
-  #reader-content.rtl .oiti-head3 { text-align:right; }
-  #reader-content.rtl .oiti-bayt  { direction:rtl; }
-  .search-snippet { padding:7px 10px; margin:4px 0; border:1px solid var(--border);
-                    border-radius:5px; font-size:12px; line-height:1.7; cursor:pointer;
-                    background:#faf8f3; transition:background .15s; }
-  .search-snippet:hover { background:var(--cream); }
-  .search-snippet-hint { font-size:9px; font-family:'IBM Plex Mono',monospace;
-                         color:var(--muted); margin-top:3px; }
-
-  /* ══ Reader AI Popup ══ */
-  #reader-ai-popup {
-    position: fixed; z-index: 999;
-    background: var(--ink); color: var(--paper);
-    border-radius: 8px; padding: 4px;
-    display: none; flex-direction: column; gap: 2px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.35);
-    min-width: 160px;
-    animation: popupIn 0.12s ease;
+  :root {
+    --ink: #1a1410;
+    --paper: #f5f0e8;
+    --cream: #ede7d9;
+    --gold: #b8860b;
+    --gold-light: #d4a017;
+    --gold-dim: #7a5a08;
+    --muted: #7a6e5f;
+    --border: #cfc4b0;
+    --sidebar-w: 300px;
+    --error: #c0392b;
   }
-  @keyframes popupIn { from{opacity:0;transform:scale(.95)translateY(-4px);} to{opacity:1;transform:scale(1)translateY(0);} }
-  #reader-ai-popup .popup-label {
-    font-size: 9px; font-family: 'IBM Plex Mono', monospace;
-    letter-spacing: .1em; text-transform: uppercase;
-    color: #5a4e40; padding: 4px 8px 2px;
-  }
-  .popup-btn {
-    display: flex; align-items: center; gap: 7px;
-    padding: 6px 10px; border-radius: 5px;
-    background: none; border: none; cursor: pointer;
-    font-size: 12px; font-family: 'IBM Plex Sans', sans-serif;
-    color: var(--paper); text-align: left; width: 100%;
-    transition: background .12s;
-  }
-  .popup-btn:hover { background: #2a2420; }
-  .popup-btn .btn-icon { font-size: 13px; flex-shrink: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'IBM Plex Sans', sans-serif; background: var(--paper); color: var(--ink); height: 100vh; display: flex; overflow: hidden; }
 
-  /* ══ Reader AI Response Panel ══ */
-  #reader-ai-response {
-    display: none; flex-direction: column;
-    border-top: 1px solid var(--border);
-    background: var(--cream); flex-shrink: 0;
-    max-height: 240px;
-  }
-  #reader-ai-response.open { display: flex; }
-  #reader-ai-response-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 8px 14px; border-bottom: 1px solid var(--border);
-    font-size: 10px; font-family: 'IBM Plex Mono', monospace;
-    color: var(--muted); letter-spacing: .06em; text-transform: uppercase;
-    flex-shrink: 0;
-  }
-  #reader-ai-close {
-    background: none; border: none; cursor: pointer;
-    font-size: 14px; color: var(--muted); line-height: 1;
-    transition: color .12s;
-  }
-  #reader-ai-close:hover { color: var(--ink); }
-  #reader-ai-body {
-    flex: 1; overflow-y: auto; padding: 12px 14px;
-    font-size: 13px; line-height: 1.7; color: var(--ink);
-  }
-  #reader-ai-body::-webkit-scrollbar { width: 3px; }
-  #reader-ai-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-  #reader-ai-body p { margin-bottom: 8px; }
-  #reader-ai-body p:last-child { margin-bottom: 0; }
-  #reader-ai-loading {
-    display: flex; align-items: center; gap: 5px;
-    font-size: 11px; font-family: 'IBM Plex Mono', monospace;
-    color: var(--muted);
-  }
-  #reader-ai-loading span {
-    width: 5px; height: 5px; background: var(--muted);
-    border-radius: 50%; animation: bounce 1.2s infinite;
-  }
-  #reader-ai-loading span:nth-child(2){animation-delay:.2s;}
-  #reader-ai-loading span:nth-child(3){animation-delay:.4s;}
+  /* ── SIDEBAR ── */
+  #sidebar { width: var(--sidebar-w); min-width: var(--sidebar-w); background: var(--ink); color: var(--paper); display: flex; flex-direction: column; overflow: hidden; }
+  #sidebar-header { padding: 20px 18px 14px; border-bottom: 1px solid #2e2620; }
+  #sidebar-header h1 { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: #d4a017; line-height: 1.3; }
+  #sidebar-header p { font-size: 10px; color: #7a6e5f; margin-top: 3px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.07em; text-transform: uppercase; }
 
-  /* ══ Translate button on search snippet cards ══ */
-  .snippet-ai-btn {
-    display: inline-flex; align-items: center; gap: 4px;
-    margin-top: 5px; padding: 3px 8px;
-    background: var(--ink); color: var(--gold-light);
-    border: none; border-radius: 4px; cursor: pointer;
-    font-size: 10px; font-family: 'IBM Plex Mono', monospace;
-    letter-spacing: .04em; transition: background .12s;
-  }
-  .snippet-ai-btn:hover { background: #2a2420; }
+  /* API KEY AREA */
+  #api-key-area { padding: 10px 14px; border-bottom: 1px solid #2e2620; background: #120e0a; }
+  #api-key-label { font-size: 9px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.1em; text-transform: uppercase; color: #5a4e40; margin-bottom: 5px; }
+  #api-key-row { display: flex; gap: 6px; align-items: center; }
+  #api-key-input { flex: 1; padding: 6px 8px; background: #1e1810; border: 1px solid #3a3028; border-radius: 5px; font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: #b0a090; outline: none; width: 0; }
+  #api-key-input:focus { border-color: var(--gold-dim); }
+  #api-key-input::placeholder { color: #3a3028; }
+  #api-key-save { padding: 5px 10px; background: var(--gold-dim); border: none; border-radius: 5px; font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: #d4a017; cursor: pointer; white-space: nowrap; transition: background 0.15s; }
+  #api-key-save:hover { background: var(--gold); color: white; }
+  #api-key-status { font-size: 10px; font-family: 'IBM Plex Mono', monospace; margin-top: 4px; }
+  #api-key-status.ok { color: #4a9a5a; }
+  #api-key-status.err { color: var(--error); }
 
-  /* ══ About Drawer ══ */
-  #about-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(20,15,10,0.55); z-index: 200;
-    backdrop-filter: blur(3px);
-  }
-  #about-overlay.open { display: block; }
+  /* REPO AREA */
+  #repo-area { padding: 10px 14px; border-bottom: 1px solid #2e2620; }
+  #repo-label { font-size: 9px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.1em; text-transform: uppercase; color: #5a4e40; margin-bottom: 5px; }
+  #repo-row { display: flex; gap: 6px; }
+  #repo-input { flex: 1; padding: 6px 8px; background: #1e1810; border: 1px solid #3a3028; border-radius: 5px; font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: #b0a090; outline: none; min-width: 0; }
+  #repo-input:focus { border-color: var(--gold-dim); }
+  #repo-load { padding: 5px 10px; background: #2a2420; border: 1px solid #3a3028; border-radius: 5px; font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: #b0a090; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+  #repo-load:hover { border-color: var(--gold-dim); color: var(--gold-light); }
+  #repo-status { font-size: 10px; font-family: 'IBM Plex Mono', monospace; margin-top: 4px; color: #5a4e40; }
+  #repo-status.ok { color: #4a9a5a; }
+  #repo-status.err { color: var(--error); }
+  #repo-status.loading { color: var(--gold-dim); }
 
-  #about-drawer {
-    position: fixed; top: 0; left: 0; bottom: 0;
-    width: 480px; max-width: 95vw;
-    background: var(--paper);
-    box-shadow: 4px 0 32px rgba(0,0,0,0.25);
-    display: flex; flex-direction: column;
-    transform: translateX(-100%);
-    transition: transform 0.28s cubic-bezier(.4,0,.2,1);
-    z-index: 201;
-  }
-  #about-drawer.open { transform: translateX(0); }
+  /* SCOPE */
+  #library-scope { padding: 10px 14px; border-bottom: 1px solid #2e2620; }
+  #scope-all { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 500; color: #b0a090; transition: all 0.15s; letter-spacing: 0.03em; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; border: 1px solid transparent; }
+  #scope-all:hover { color: var(--gold-light); background: #2a2420; }
+  #scope-all.active { color: var(--gold-light); background: #2a2420; border-color: var(--gold-dim); }
+  #scope-all .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
 
-  #about-drawer-header {
-    padding: 20px 22px 14px;
-    border-bottom: 2px solid var(--gold);
-    background: var(--ink);
-    display: flex; align-items: flex-start; justify-content: space-between;
-    flex-shrink: 0;
-  }
-  #about-drawer-header h2 {
-    font-family: 'Libre Franklin', sans-serif;
-    font-size: 18px; font-weight: 700;
-    color: var(--gold-light); line-height: 1.3;
-  }
-  #about-drawer-header p {
-    font-size: 10px; color: #5a4e40;
-    font-family: 'IBM Plex Mono', monospace;
-    letter-spacing: .07em; text-transform: uppercase;
-    margin-top: 3px;
-  }
-  #about-close {
-    background: none; border: none; cursor: pointer;
-    color: #5a4e40; font-size: 20px; line-height: 1;
-    transition: color .15s; padding: 2px;
-    flex-shrink: 0; margin-left: 12px;
-  }
-  #about-close:hover { color: var(--gold-light); }
+  /* BOOKS */
+  #books-list { flex: 1; overflow-y: auto; padding: 8px 10px; }
+  #books-list::-webkit-scrollbar { width: 3px; }
+  #books-list::-webkit-scrollbar-thumb { background: #3a3028; border-radius: 2px; }
+  .section-label { font-size: 9px; color: #3a3028; letter-spacing: 0.12em; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; padding: 8px 8px 4px; }
+  .book-item { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; border-radius: 6px; cursor: pointer; margin-bottom: 2px; transition: all 0.15s; border: 1px solid transparent; }
+  .book-item:hover { background: #2a2420; }
+  .book-item.active { background: #2a2420; border-color: var(--gold-dim); }
+  .book-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+  .book-meta { flex: 1; min-width: 0; }
+  .book-title { font-size: 12px; font-weight: 500; color: var(--paper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .book-author { font-size: 10px; color: #7a6e5f; font-family: 'IBM Plex Mono', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .book-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
+  .tag { font-size: 9px; padding: 1px 5px; border-radius: 3px; background: #2e2620; color: #7a6e5f; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em; }
+  .tag.ar { color: #c8a060; background: #2e2010; }
+  .tag.fa { color: #80a0c8; background: #10203e; }
 
-  #about-body {
-    flex: 1; overflow-y: auto;
-    padding: 24px 26px 32px;
-    font-size: 13px; line-height: 1.75; color: var(--ink);
-  }
-  #about-body::-webkit-scrollbar { width: 4px; }
-  #about-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  /* UPLOAD SECTION */
+  #upload-section { padding: 10px 14px; border-top: 1px solid #2e2620; }
+  #upload-toggle { font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: #5a4e40; cursor: pointer; letter-spacing: 0.06em; text-transform: uppercase; display: flex; align-items: center; gap: 6px; transition: color 0.15s; }
+  #upload-toggle:hover { color: var(--gold-dim); }
+  #upload-panel { display: none; margin-top: 10px; }
+  #upload-panel.open { display: block; }
+  #upload-title-in { width: 100%; padding: 6px 8px; background: #1e1810; border: 1px solid #3a3028; border-radius: 5px; font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: #b0a090; outline: none; margin-bottom: 6px; }
+  #upload-title-in:focus { border-color: var(--gold-dim); }
+  #upload-title-in::placeholder { color: #3a3028; }
+  #upload-zone { border: 1.5px dashed #3a3028; border-radius: 6px; padding: 12px 10px; text-align: center; cursor: pointer; font-size: 11px; color: #5a4e40; font-family: 'IBM Plex Mono', monospace; transition: all 0.15s; }
+  #upload-zone:hover, #upload-zone.drag { border-color: var(--gold-dim); color: var(--gold-dim); }
+  #file-in { display: none; }
+  #upload-name { font-size: 10px; color: var(--gold-dim); margin-top: 5px; font-family: 'IBM Plex Mono', monospace; display: none; }
+  #paste-area { width: 100%; height: 80px; padding: 7px 8px; background: #1e1810; border: 1px solid #3a3028; border-radius: 5px; font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: #b0a090; resize: none; outline: none; margin-top: 6px; }
+  #paste-area:focus { border-color: var(--gold-dim); }
+  #paste-area::placeholder { color: #3a3028; }
+  #add-text-btn { width: 100%; margin-top: 8px; padding: 7px; background: var(--gold-dim); border: none; border-radius: 5px; font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: var(--gold-light); cursor: pointer; transition: background 0.15s; letter-spacing: 0.05em; }
+  #add-text-btn:hover { background: var(--gold); color: white; }
 
-  #about-body h2 {
-    font-family: 'Libre Franklin', sans-serif;
-    font-size: 16px; font-weight: 700;
-    color: var(--ink); margin: 22px 0 8px;
-    padding-bottom: 5px; border-bottom: 1px solid var(--border);
-  }
-  #about-body h2:first-child { margin-top: 0; }
-  #about-body h3 {
-    font-family: 'Libre Franklin', sans-serif;
-    font-size: 13px; font-weight: 600;
-    color: var(--ink); margin: 16px 0 6px;
-  }
-  #about-body h5 {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px; letter-spacing: .08em;
-    text-transform: uppercase; color: var(--muted);
-    margin: 14px 0 4px;
-  }
-  #about-body p { margin-bottom: 10px; }
-  #about-body a { color: var(--gold-dim); text-decoration: none; }
-  #about-body a:hover { text-decoration: underline; }
-  #about-body ul { padding-left: 18px; margin-bottom: 10px; }
-  #about-body li { margin-bottom: 4px; }
-  #about-body code, #about-body pre {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px; background: var(--cream);
-    border: 1px solid var(--border); border-radius: 4px;
-    padding: 1px 5px;
-  }
-  #about-body pre {
-    padding: 10px 14px; overflow-x: auto;
-    margin: 10px 0; line-height: 1.6;
-  }
-  #about-body pre code { background: none; border: none; padding: 0; }
-  #about-body img { max-width: 100%; border-radius: 6px; margin: 10px 0; }
-  #about-body strong { font-weight: 600; }
+  /* ── MAIN ── */
+  #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  #chat-header { padding: 14px 24px; border-bottom: 1px solid var(--border); background: var(--paper); display: flex; align-items: center; gap: 12px; }
+  #chat-header-icon { font-size: 20px; }
+  #chat-header-info { flex: 1; min-width: 0; }
+  #chat-header-title { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #chat-header-meta { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
 
-  /* About button in sidebar */
-  #about-btn {
-    background: none; border: none; cursor: pointer;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px; color: #5a4e40;
-    letter-spacing: .07em; text-transform: uppercase;
-    padding: 0; margin-top: 4px;
-    transition: color .15s; display: inline-block;
-  }
-  #about-btn:hover { color: var(--gold-dim); }
+  /* MODE TOGGLE */
+  #mode-toggle { display: flex; gap: 4px; background: var(--cream); border: 1px solid var(--border); border-radius: 8px; padding: 3px; }
+  .mode-btn { padding: 5px 10px; border: none; border-radius: 5px; background: none; font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: var(--muted); cursor: pointer; transition: all 0.15s; white-space: nowrap; letter-spacing: 0.04em; }
+  .mode-btn.active { background: var(--ink); color: var(--gold-light); }
 
-  /* ══ API Key visitor toggle ══ */
-  #api-visitor-row {
-    display: none; margin-top: 6px;
-    padding-top: 6px; border-top: 1px solid #2e2620;
-  }
-  #api-visitor-row.open { display: block; }
-  #api-visitor-note {
-    font-size: 9px; font-family: 'IBM Plex Mono', monospace;
-    color: #5a4e40; margin-bottom: 5px; line-height: 1.4;
-  }
+  /* MESSAGES */
+  #messages-wrap { flex: 1; overflow-y: auto; padding: 24px 28px; display: flex; flex-direction: column; gap: 18px; }
+  #messages-wrap::-webkit-scrollbar { width: 5px; }
+  #messages-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .msg { max-width: 760px; display: flex; flex-direction: column; gap: 4px; animation: fadeUp 0.2s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .msg.user { align-self: flex-end; align-items: flex-end; }
+  .msg.assistant { align-self: flex-start; align-items: flex-start; }
+  .msg-label { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; color: var(--muted); }
+  .msg-bubble { padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.75; max-width: 680px; }
+  .msg.user .msg-bubble { background: var(--ink); color: var(--paper); border-bottom-right-radius: 3px; }
+  .msg.assistant .msg-bubble { background: var(--cream); color: var(--ink); border: 1px solid var(--border); border-bottom-left-radius: 3px; }
+  .msg.assistant .msg-bubble p { margin-bottom: 10px; }
+  .msg.assistant .msg-bubble p:last-child { margin-bottom: 0; }
+  .msg.assistant .msg-bubble strong { color: var(--gold-dim); }
+  /* RTL text detection for Arabic/Persian passages */
+  .rtl-passage { direction: rtl; font-size: 15px; line-height: 2; background: #e8e0d0; border-right: 3px solid var(--gold); padding: 8px 12px; border-radius: 6px; margin: 8px 0; }
 
-  /* ══ Provider Selector ══ */
-  #provider-select {
-    width: 100%; padding: 5px 7px; margin-top: 5px;
-    background: #1e1810; border: 1px solid #3a3028;
-    border-radius: 4px; font-size: 10px;
-    font-family: 'IBM Plex Mono', monospace;
-    color: #b0a090; outline: none; cursor: pointer;
-    transition: border-color .15s;
-    appearance: none; -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236a5e50'/%3E%3C/svg%3E");
-    background-repeat: no-repeat; background-position: right 8px center; padding-right: 24px;
-  }
-  #provider-select:focus { border-color: var(--gold-dim); }
-  #provider-select option { background: #1e1810; color: #b0a090; }
-  .provider-hint { font-size: 9px; font-family: 'IBM Plex Mono', monospace; color: #4a3e40; margin-top: 3px; line-height: 1.4; }
-  .provider-hint a { color: var(--gold-dim); text-decoration: none; }
-  .provider-hint a:hover { text-decoration: underline; }
+  /* EMPTY STATE */
+  #empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; color: var(--muted); padding: 40px; }
+  #empty-state .big-icon { font-size: 52px; margin-bottom: 4px; }
+  #empty-state h2 { font-family: 'Playfair Display', serif; font-size: 22px; font-style: italic; color: var(--ink); }
+  #empty-state p { font-size: 13px; max-width: 400px; line-height: 1.6; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px; }
+  .chip { padding: 6px 14px; background: var(--cream); border: 1px solid var(--border); border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 0.15s; color: var(--ink); }
+  .chip:hover { border-color: var(--gold); background: #e8d8b0; }
+
+  /* TYPING */
+  #typing { display: none; align-self: flex-start; align-items: center; gap: 4px; padding: 10px 14px; background: var(--cream); border: 1px solid var(--border); border-radius: 12px; border-bottom-left-radius: 3px; animation: fadeUp 0.2s ease; }
+  #typing span { width: 6px; height: 6px; background: var(--muted); border-radius: 50%; animation: bounce 1.2s infinite; }
+  #typing span:nth-child(2) { animation-delay: 0.2s; }
+  #typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,80%,100% { transform: translateY(0); } 40% { transform: translateY(-5px); } }
+
+  /* INPUT */
+  #input-area { padding: 14px 24px 18px; border-top: 1px solid var(--border); background: var(--paper); }
+  #no-texts-notice { text-align: center; font-size: 12px; color: var(--muted); padding: 8px; font-style: italic; }
+  #no-key-notice { text-align: center; font-size: 12px; color: var(--error); padding: 4px; }
+  #input-row { display: flex; gap: 10px; align-items: flex-end; }
+  #chat-input { flex: 1; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; font-family: 'IBM Plex Sans', sans-serif; background: #faf7f2; color: var(--ink); resize: none; outline: none; max-height: 130px; min-height: 44px; line-height: 1.5; transition: border-color 0.15s; }
+  #chat-input:focus { border-color: var(--gold); }
+  #chat-input::placeholder { color: #b0a090; }
+  #send-btn { width: 44px; height: 44px; border-radius: 10px; background: var(--gold); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s, transform 0.1s; flex-shrink: 0; }
+  #send-btn:hover { background: var(--gold-light); }
+  #send-btn:active { transform: scale(0.95); }
+  #send-btn:disabled { background: var(--border); cursor: not-allowed; }
+  #send-btn svg { fill: white; width: 17px; height: 17px; }
+
+  /* METADATA PANEL */
+  #meta-panel { display: none; padding: 16px 20px; background: var(--cream); border-bottom: 1px solid var(--border); font-size: 12px; }
+  #meta-panel.open { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .meta-item { display: flex; flex-direction: column; gap: 2px; }
+  .meta-key { font-size: 9px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .meta-val { font-size: 12px; color: var(--ink); font-weight: 500; }
 </style>
 </head>
 <body>
 
-<!-- ══ SIDEBAR ══ -->
+<!-- SIDEBAR -->
 <div id="sidebar">
   <div id="sidebar-header">
     <h1>Alamut Library</h1>
-    <p>Digital Ismaili Texts &nbsp;·&nbsp; <button id="about-btn" onclick="openAbout()">About</button></p>
+    <p>Digital Ismaili Texts</p>
   </div>
 
+  <!-- API KEY -->
   <div id="api-key-area">
-    <div class="sb-label" style="display:flex;align-items:center;justify-content:space-between;">
-      <span>AI Provider</span>
-      <button onclick="toggleVisitorKey()" style="background:none;border:none;cursor:pointer;font-size:9px;font-family:'IBM Plex Mono',monospace;color:#5a4e40;letter-spacing:.06em;text-transform:uppercase;" id="visitor-key-toggle">+ Use your own key</button>
+    <div id="api-key-label">Anthropic API Key</div>
+    <div id="api-key-row">
+      <input type="password" id="api-key-input" placeholder="sk-ant-…">
+      <button id="api-key-save" onclick="saveApiKey()">Save</button>
     </div>
-    <select id="provider-select" onchange="onProviderChange()">
-      <option value="anthropic">🔶 Anthropic Claude (library key)</option>
-      <option value="anthropic-own">🔶 Anthropic Claude (your key)</option>
-      <option value="openai">🟢 OpenAI GPT-4o</option>
-      <option value="gemini">🔵 Google Gemini 2.0 Flash (free)</option>
-      <option value="groq">⚡ Groq — Llama 3.3-70B (free)</option>
-      <option value="mistral">🟠 Mistral Large</option>
-      <option value="deepseek">⚫ DeepSeek V3</option>
-    </select>
-    <div id="api-visitor-row">
-      <div id="api-visitor-note" class="provider-hint">Enter your API key below. <span id="provider-link"></span></div>
-      <div class="sb-row" style="margin-top:5px;">
-        <input type="password" class="sb-input" id="api-key-input" placeholder="Paste your API key…" oninput="autoDetectProvider(this.value)">
-        <button class="sb-btn" onclick="saveApiKey()">Save</button>
-      </div>
-      <div class="sb-status" id="api-key-status"></div>
-    </div>
+    <div id="api-key-status"></div>
   </div>
 
+  <!-- REPO -->
   <div id="repo-area">
-    <div class="sb-label">GitHub Repo</div>
-    <div class="sb-row">
-      <input type="text" class="sb-input" id="repo-input" placeholder="owner/repo" value="AlamutLibrary/DigIT.2.0">
-      <button class="sb-btn ghost" onclick="loadRepo()">Load</button>
+    <div id="repo-label">GitHub Repo</div>
+    <div id="repo-row">
+      <input type="text" id="repo-input" placeholder="owner/repo" value="AlamutLibrary/DigIT.1.0">
+      <button id="repo-load" onclick="loadRepo()">Load</button>
     </div>
-    <div class="sb-status" id="repo-status">Enter repo and click Load</div>
+    <div id="repo-status">Enter repo and click Load</div>
   </div>
 
+  <!-- SCOPE -->
   <div id="library-scope">
     <div id="scope-all" class="active" onclick="selectScope('all')">
-      <div class="dot"></div>Entire Library
+      <div class="dot"></div>
+      Entire Library
     </div>
   </div>
 
+  <!-- BOOK LIST -->
   <div id="books-list">
     <div class="section-label">Texts</div>
-    <div id="book-items">
-      <div style="font-size:10px;color:#3a3028;padding:4px 7px;font-family:'IBM Plex Mono',monospace;">Load a repo to browse texts</div>
-    </div>
+    <div id="book-items"><div style="font-size:11px;color:#3a3028;padding:4px 8px;font-family:'IBM Plex Mono',monospace;">Load a repo to browse texts</div></div>
   </div>
 
+  <!-- UPLOAD OWN TEXT -->
   <div id="upload-section">
     <div id="upload-toggle" onclick="toggleUpload()">
       <span id="upload-arrow">▶</span> Add your own text
     </div>
     <div id="upload-panel">
-      <input type="text" class="sb-input" id="upload-title-in" placeholder="Title" style="width:100%;margin-bottom:5px;">
+      <input type="text" id="upload-title-in" placeholder="Title (e.g. Wajh-i Din)">
       <div id="upload-zone" onclick="document.getElementById('file-in').click()"
            ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
-        Drop .txt / .md / .ara1 / .per1 or click
+        Drop .txt / .md file or click to browse
       </div>
       <input type="file" id="file-in" accept=".txt,.md,.ara1,.per1" onchange="fileSelected(event)">
       <div id="upload-name"></div>
-      <textarea id="paste-area" placeholder="…or paste text here"></textarea>
+      <textarea id="paste-area" placeholder="…or paste text here (Arabic, Persian, English)"></textarea>
       <button id="add-text-btn" onclick="addLocalText()">Add to Library</button>
     </div>
   </div>
 </div>
 
-<!-- ══ RESIZER left ══ -->
-<div class="resizer" id="res-left" onmousedown="startResize(event,'sidebar','left')"></div>
-
-<!-- ══ CHAT PANEL ══ -->
-<div id="chat-panel">
+<!-- MAIN -->
+<div id="main">
   <div id="chat-header">
     <div id="chat-header-icon">📚</div>
     <div id="chat-header-info">
@@ -550,25 +237,23 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
       <div id="chat-header-meta">No texts loaded</div>
     </div>
     <div id="mode-toggle">
-      <button class="mode-btn active" id="mode-relevant" onclick="setMode('relevant')" title="Fast — sends only the most relevant passages">Passages</button>
-      <button class="mode-btn" id="mode-full" onclick="setMode('full')" title="Thorough — sends full text">Full</button>
+      <button class="mode-btn active" id="mode-relevant" onclick="setMode('relevant')" title="Sends only the most relevant passages to the AI — fast">Relevant Passages</button>
+      <button class="mode-btn" id="mode-full" onclick="setMode('full')" title="Sends the full text — more thorough but slower">Full Text</button>
     </div>
-    <button id="open-reader-btn" onclick="toggleReader()" title="Toggle text reader">📖 Reader</button>
   </div>
 
+  <!-- METADATA STRIP -->
   <div id="meta-panel"></div>
 
+  <!-- MESSAGES -->
   <div id="messages-wrap">
     <div id="empty-state">
-      <img src="https://raw.githubusercontent.com/AlamutLibrary/DigIT.2.0/master/images/logo.png" 
-     alt="Alamut Library" 
-     style="width:80px;height:80px;object-fit:contain;margin-bottom:4px;"
-     onerror="this.style.display='none'">
-      <h2>Explore the Alamut Library</h2>
-      <p>Load texts from the Digital Ismaili Texts v.2.0 corpus, or add your own, then ask anything — about Ismaili thought, history, philosophy, key passages, comparisons.</p>
+      <div class="big-icon">🕌</div>
+      <h2>Explore the Ismaili Corpus</h2>
+      <p>Load texts from GitHub or add your own, then ask anything — themes, doctrines, comparisons, translations, key passages.</p>
       <div class="chips">
-        <div class="chip" onclick="useChip(this)">What is this text about?</div>
-        <div class="chip" onclick="useChip(this)">Summarise the key ideas of the text</div>
+        <div class="chip" onclick="useChip(this)">What are the central theological arguments?</div>
+        <div class="chip" onclick="useChip(this)">Summarise the key doctrines</div>
         <div class="chip" onclick="useChip(this)">Find references to the Imam</div>
         <div class="chip" onclick="useChip(this)">Compare ideas across texts</div>
         <div class="chip" onclick="useChip(this)">Translate the opening passage</div>
@@ -578,8 +263,8 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
   </div>
 
   <div id="input-area">
-    <div id="no-key-notice"  class="notice warn" style="display:none">⚠ Enter your Anthropic API key in the sidebar to chat.</div>
-    <div id="no-text-notice" class="notice info" style="display:none">Load texts from a GitHub repo or add your own to begin.</div>
+    <div id="no-key-notice" style="display:none">⚠ Enter your Anthropic API key in the sidebar to chat.</div>
+    <div id="no-texts-notice" style="display:none">Load texts from a GitHub repo or add your own to begin.</div>
     <div id="input-row">
       <textarea id="chat-input" placeholder="Ask anything about the texts…" rows="1"
         onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
@@ -590,181 +275,52 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
   </div>
 </div>
 
-<!-- ══ RESIZER right ══ -->
-<div class="resizer" id="res-right" onmousedown="startResize(event,'reader-panel','right')" style="display:none"></div>
-
-<!-- ══ READER PANEL ══ -->
-<div id="reader-panel">
-
-  <!-- SEARCH -->
-  <div id="search-bar">
-    <div id="search-bar-title">
-      <span>Search</span>
-      <span id="search-scope-lbl">no text open</span>
-    </div>
-    <div id="search-row">
-      <input type="text" id="search-input" placeholder="Search… (regex supported)"
-        oninput="onSearchInput()" onkeydown="searchKeyNav(event)">
-    </div>
-    <div id="search-opts">
-      <label class="search-toggle" id="lbl-regex">
-        <input type="checkbox" id="opt-regex" onchange="syncToggle('lbl-regex','opt-regex'); runSearch()">
-        .* Regex
-      </label>
-
-      <label class="search-toggle" id="lbl-all">
-        <input type="checkbox" id="opt-all" onchange="syncToggle('lbl-all','opt-all'); runSearch()">
-        All Texts
-      </label>
-    </div>
-    <div id="search-status">
-      <span id="search-count"></span>
-      <span id="search-nav">
-        <button class="nav-btn" id="nav-prev" onclick="navHit(-1)" disabled>↑ Prev</button>
-        <button class="nav-btn" id="nav-next" onclick="navHit(+1)" disabled>↓ Next</button>
-      </span>
-    </div>
-  </div>
-
-  <!-- BOOK HEADER -->
-  <div id="reader-header">
-    <div id="reader-book-title">No text selected</div>
-    <div id="reader-book-author"></div>
-  </div>
-
-  <!-- CONTENT -->
-  <div id="reader-content">
-    <div id="reader-empty">
-      <div class="icon">📜</div>
-      <p>Select a text from the sidebar to open it here for reading.</p>
-    </div>
-  </div>
-
-  <!-- AI RESPONSE PANEL (slides up from bottom of reader) -->
-  <div id="reader-ai-response">
-    <div id="reader-ai-response-header">
-      <span id="reader-ai-label">AI Response</span>
-      <button id="reader-ai-close" onclick="closeReaderAI()" title="Close">✕</button>
-    </div>
-    <div id="reader-ai-body"></div>
-  </div>
-</div>
-
-<!-- FLOATING AI POPUP (appears on text selection) -->
-<div id="reader-ai-popup">
-  <div class="popup-label">Selected text</div>
-  <button class="popup-btn" onclick="readerAIAction('translate')">
-    <span class="btn-icon">🌐</span> Translate
-  </button>
-  <button class="popup-btn" onclick="readerAIAction('explain')">
-    <span class="btn-icon">💡</span> Explain
-  </button>
-  <button class="popup-btn" onclick="readerAIAction('ask')">
-    <span class="btn-icon">💬</span> Ask AI about this
-  </button>
-</div>
-
 <script>
-// ══ CONFIG ══
-const WORKER_URL = 'https://alamut.alamut.workers.dev'; // Set to your Cloudflare Worker URL in production
+// ── CONFIG ──
+// In production on GitHub Pages, set WORKER_URL to your Cloudflare Worker URL
+// e.g. const WORKER_URL = 'https://alamut-proxy.YOUR_ACCOUNT.workers.dev';
+const WORKER_URL = ''; // leave empty to call Anthropic directly using user's key
 
-// ══ STATE ══
-let books        = [];
-let activeScope  = 'all';
-let messages     = [];
-let isLoading    = false;
-let chatMode     = 'relevant';
-let apiKey       = '';
+// ── STATE ──
+let books = [];          // { id, title, author, date, lang, genre, content, meta, source }
+let activeScope = 'all'; // 'all' | index
+let messages = [];
+let isLoading = false;
+let chatMode = 'relevant'; // 'relevant' | 'full'
+let apiKey = '';
 let uploadedText = '';
-let readerOpen   = false;
-let readerBookIdx = null;
+let uploadPanelOpen = false;
 
-// Search
-let searchHits    = [];
-let searchHitIdx  = -1;
-let searchTimer   = null;
-
-// ══ INIT ══
+// ── INIT ──
 window.onload = () => {
   const saved = sessionStorage.getItem('al_api_key');
-  if (saved) { apiKey = saved; document.getElementById('api-key-input').value = saved; setStatus('api-key-status','✓ Key loaded from session','ok'); }
+  if (saved) { apiKey = saved; document.getElementById('api-key-input').value = saved; setKeyStatus('✓ Key loaded from session', 'ok'); }
   refreshUI();
 };
 
-// ══ API KEY ══
-// ── PROVIDER STATE ──
-let activeProvider = 'anthropic';
-
-const PROVIDER_INFO = {
-  'anthropic':     { name: 'Anthropic Claude',   model: 'claude-sonnet-4-20250514', placeholder: 'sk-ant-…',  link: 'https://console.anthropic.com/settings/keys' },
-  'anthropic-own': { name: 'Anthropic Claude',   model: 'claude-sonnet-4-20250514', placeholder: 'sk-ant-…',  link: 'https://console.anthropic.com/settings/keys' },
-  'openai':        { name: 'OpenAI GPT-4o',       model: 'gpt-4o',                  placeholder: 'sk-proj-…', link: 'https://platform.openai.com/api-keys' },
-  'gemini':        { name: 'Google Gemini 2.0',   model: 'gemini-2.0-flash',        placeholder: 'AIza…',     link: 'https://aistudio.google.com/app/apikey' },
-  'mistral':       { name: 'Mistral Large',        model: 'mistral-large-latest',   placeholder: 'your key…', link: 'https://console.mistral.ai/api-keys' },
-  'deepseek':      { name: 'DeepSeek V3',          model: 'deepseek-chat',          placeholder: 'sk-…',      link: 'https://platform.deepseek.com/api_keys' },
-  'groq':          { name: 'Groq (Llama 3.3-70B)', model: 'llama-3.3-70b-versatile', placeholder: 'gsk_…',   link: 'https://console.groq.com/keys' },
-};
-
-function onProviderChange() {
-  const sel  = document.getElementById('provider-select').value;
-  activeProvider = sel;
-  const row  = document.getElementById('api-visitor-row');
-  const info = PROVIDER_INFO[sel];
-  if (sel === 'anthropic') {
-    row.classList.remove('open');
-    document.getElementById('visitor-key-toggle').textContent = '+ Use your own key';
-  } else {
-    row.classList.add('open');
-    document.getElementById('api-key-input').placeholder = info.placeholder;
-    document.getElementById('api-key-input').value = '';
-    document.getElementById('api-key-status').textContent = '';
-    document.getElementById('api-visitor-note').innerHTML =
-      'Get a free key at <a href="' + info.link + '" target="_blank">' + info.link.replace('https://','') + '</a>';
-    document.getElementById('visitor-key-toggle').textContent = '− Hide';
-    const saved = sessionStorage.getItem('al_key_' + sel);
-    if (saved) {
-      document.getElementById('api-key-input').value = saved;
-      setStatus('api-key-status', '✓ Key loaded', 'ok');
-    }
-    document.getElementById('api-key-input').focus();
-  }
-  apiKey = sessionStorage.getItem('al_key_' + sel) || '';
-  refreshUI();
-}
-
-function autoDetectProvider(key) {
-  if (!key || key.length < 8) return;
-  let detected = null;
-  if      (key.startsWith('sk-ant-'))   detected = 'anthropic-own';
-  else if (key.startsWith('AIza'))      detected = 'gemini';
-  else if (key.startsWith('gsk_'))      detected = 'groq';
-  else if (key.startsWith('sk-proj-'))  detected = 'openai';
-  else if (key.startsWith('sk-') && key.length > 40 && !key.startsWith('sk-ant')) detected = 'openai';
-  if (detected && detected !== activeProvider) {
-    document.getElementById('provider-select').value = detected;
-    onProviderChange();
-    document.getElementById('api-key-input').value = key;
-  }
-}
-
+// ── API KEY ──
 function saveApiKey() {
   const v = document.getElementById('api-key-input').value.trim();
-  if (!v || v.length < 10) { setStatus('api-key-status','⚠ Key too short','err'); return; }
+  if (!v.startsWith('sk-')) { setKeyStatus('⚠ Invalid key format', 'err'); return; }
   apiKey = v;
-  sessionStorage.setItem('al_key_' + activeProvider, v);
-  setStatus('api-key-status','✓ Saved for this session','ok');
+  sessionStorage.setItem('al_api_key', v);
+  setKeyStatus('✓ Saved for this session', 'ok');
   refreshUI();
 }
+function setKeyStatus(msg, cls) {
+  const el = document.getElementById('api-key-status');
+  el.textContent = msg; el.className = cls;
+}
 
-// ══ REPO LOADING ══
+// ── REPO LOADING ──
 async function loadRepo() {
   const repo = document.getElementById('repo-input').value.trim();
   if (!repo) return;
-  setStatus('repo-status','Loading texts.yml…','loading');
-  books = [];
+  setRepoStatus('Loading texts.yml…', 'loading');
 
+  // Try to fetch texts.yml from the repo's main/master branch
   let yamlText = null;
-  for (const branch of ['main','master']) {
+  for (const branch of ['main', 'master']) {
     try {
       const r = await fetch(`https://raw.githubusercontent.com/${repo}/${branch}/texts.yml`);
       if (r.ok) { yamlText = await r.text(); break; }
@@ -772,960 +328,451 @@ async function loadRepo() {
   }
 
   if (!yamlText) {
-    setStatus('repo-status','texts.yml not found — scanning repo…','loading');
-    await autoDiscoverTexts(repo); refreshUI(); return;
+    // Try GitHub API to list files and auto-discover OpenITI texts
+    setRepoStatus('texts.yml not found — scanning repo…', 'loading');
+    await autoDiscoverTexts(repo);
+    return;
   }
 
   try {
-    const data  = jsyaml.load(yamlText);
+    const data = jsyaml.load(yamlText);
     const texts = data.texts || data;
-    if (!Array.isArray(texts)||!texts.length) { setStatus('repo-status','texts.yml empty or malformed','err'); return; }
-    for (let i=0;i<texts.length;i++) {
-      await loadTextFromManifest(repo, texts[i]);
-      setStatus('repo-status',`Loaded ${i+1}/${texts.length}…`,'loading');
+    if (!Array.isArray(texts) || texts.length === 0) { setRepoStatus('texts.yml is empty or malformed', 'err'); return; }
+
+    let loaded = 0;
+    setRepoStatus(`Loading ${texts.length} texts…`, 'loading');
+    for (const t of texts) {
+      await loadTextFromManifest(repo, t);
+      loaded++;
+      setRepoStatus(`Loaded ${loaded}/${texts.length}…`, 'loading');
     }
-    setStatus('repo-status',`✓ ${books.length} texts loaded`,'ok');
-  } catch(e) { setStatus('repo-status','Parse error: '+e.message,'err'); }
+    setRepoStatus(`✓ ${books.length} texts loaded`, 'ok');
+  } catch(e) {
+    setRepoStatus('Error parsing texts.yml: ' + e.message, 'err');
+  }
   refreshUI();
 }
 
 async function loadTextFromManifest(repo, t) {
-  const branch = t.branch||'main';
-  const path   = t.raw_text_path||t.path;
+  const branch = t.branch || 'main';
+  const path = t.raw_text_path || t.path;
   if (!path) return;
-  let content='', meta={};
-  try { const r=await fetch(`https://raw.githubusercontent.com/${repo}/${branch}/${path}`); if(r.ok) content=await r.text(); } catch(e){}
-  if (t.github_path||t.yml_path) {
-    try { const r=await fetch(`https://raw.githubusercontent.com/${repo}/${branch}/${t.github_path||t.yml_path}`); if(r.ok) meta=jsyaml.load(await r.text())||{}; } catch(e){}
+
+  let content = '';
+  try {
+    const r = await fetch(`https://raw.githubusercontent.com/${repo}/${branch}/${path}`);
+    if (r.ok) content = await r.text();
+  } catch(e) {}
+
+  // Load YAML metadata if specified
+  let meta = {};
+  if (t.github_path || t.yml_path) {
+    const yPath = t.github_path || t.yml_path;
+    try {
+      const r = await fetch(`https://raw.githubusercontent.com/${repo}/${branch}/${yPath}`);
+      if (r.ok) meta = jsyaml.load(await r.text()) || {};
+    } catch(e) {}
   }
-  books.push({ id:t.id||slugify(t.title||path), title:t.title||meta.title||meta.AuthorLat||path.split('/').pop(), author:t.author||meta.author||meta.AuthorLat||'', date:t.date||meta.date||meta.Date||'', lang:t.language||meta.language||detectLang(content), genre:t.genre||meta.genre||meta.Genre||'', uri:t.uri||meta.uri||meta.URI||'', content, meta:{...t,...meta}, source:'github' });
+
+  books.push({
+    id: t.id || slugify(t.title || path),
+    title: t.title || meta.title || path.split('/').pop(),
+    author: t.author || meta.author || meta.AuthorLat || '',
+    date: t.date || meta.date || meta.Date || '',
+    lang: t.language || meta.language || detectLang(content),
+    genre: t.genre || meta.genre || meta.Genre || '',
+    uri: t.uri || meta.uri || meta.URI || '',
+    content: content,
+    meta: { ...t, ...meta },
+    source: 'github'
+  });
 }
 
 async function autoDiscoverTexts(repo) {
+  // Try GitHub API to list root files
   try {
     const r = await fetch(`https://api.github.com/repos/${repo}/git/trees/HEAD?recursive=1`);
-    if (!r.ok) { setStatus('repo-status','Cannot access repo. Is it public?','err'); return; }
-    const data=await r.json(); const files=(data.tree||[]).map(f=>f.path);
-    const textFiles=files.filter(f=>/\.(ara\d|per\d|txt|md)$/.test(f));
-    const ymlFiles =files.filter(f=>f.endsWith('.yml')&&!f.includes('texts.yml'));
-    if (!textFiles.length) { setStatus('repo-status','No text files found','err'); return; }
-    for (const tf of textFiles.slice(0,50)) {
-      const base=tf.replace(/\.[^.]+$/,'');
-      await loadTextFromManifest(repo,{raw_text_path:tf,github_path:ymlFiles.find(y=>y.startsWith(base))||null,branch:'main'});
+    if (!r.ok) { setRepoStatus('Could not access repo. Is it public?', 'err'); return; }
+    const data = await r.json();
+    const files = (data.tree || []).map(f => f.path);
+
+    // Find OpenITI text files (.ara1, .per1, .ara2, .per2) and .yml metadata
+    const textFiles = files.filter(f => /\.(ara\d|per\d|txt|md)$/.test(f));
+    const ymlFiles = files.filter(f => f.endsWith('.yml') && !f.includes('texts.yml'));
+
+    if (textFiles.length === 0) { setRepoStatus('No text files found in repo', 'err'); return; }
+
+    let loaded = 0;
+    for (const tf of textFiles.slice(0, 50)) { // cap at 50 to avoid rate limits
+      const baseName = tf.replace(/\.[^.]+$/, '');
+      const matchingYml = ymlFiles.find(y => y.startsWith(baseName));
+      await loadTextFromManifest(repo, {
+        raw_text_path: tf,
+        github_path: matchingYml || null,
+        branch: 'main'
+      });
+      loaded++;
     }
-    setStatus('repo-status',`✓ Auto-discovered ${books.length} texts`,'ok');
-  } catch(e) { setStatus('repo-status','GitHub API error: '+e.message,'err'); }
+    setRepoStatus(`✓ Auto-discovered ${loaded} texts`, 'ok');
+  } catch(e) {
+    setRepoStatus('GitHub API error: ' + e.message, 'err');
+  }
+  refreshUI();
 }
 
-// ══ LOCAL UPLOAD ══
-function toggleUpload() { const open=document.getElementById('upload-panel').classList.toggle('open'); document.getElementById('upload-arrow').textContent=open?'▼':'▶'; }
-function dragOver(e)  { e.preventDefault(); document.getElementById('upload-zone').classList.add('drag'); }
-function dragLeave()  { document.getElementById('upload-zone').classList.remove('drag'); }
-function dropFile(e)  { e.preventDefault(); dragLeave(); readFile(e.dataTransfer.files[0]); }
+function setRepoStatus(msg, cls) {
+  const el = document.getElementById('repo-status');
+  el.textContent = msg; el.className = cls;
+}
+
+// ── LOCAL TEXT UPLOAD ──
+function toggleUpload() {
+  uploadPanelOpen = !uploadPanelOpen;
+  document.getElementById('upload-panel').classList.toggle('open', uploadPanelOpen);
+  document.getElementById('upload-arrow').textContent = uploadPanelOpen ? '▼' : '▶';
+}
+
+function dragOver(e) { e.preventDefault(); document.getElementById('upload-zone').classList.add('drag'); }
+function dragLeave() { document.getElementById('upload-zone').classList.remove('drag'); }
+function dropFile(e) { e.preventDefault(); dragLeave(); readFile(e.dataTransfer.files[0]); }
 function fileSelected(e) { readFile(e.target.files[0]); }
 function readFile(file) {
   if (!file) return;
-  new FileReader().onload=function(ev){ uploadedText=ev.target.result; const n=document.getElementById('upload-name'); n.textContent='✓ '+file.name; n.style.display='block'; const ti=document.getElementById('upload-title-in'); if(!ti.value) ti.value=file.name.replace(/\.[^.]+$/,''); };
-  (new FileReader()).addEventListener? (() => { const fr=new FileReader(); fr.onload=e=>{ uploadedText=e.target.result; const n=document.getElementById('upload-name'); n.textContent='✓ '+file.name; n.style.display='block'; const ti=document.getElementById('upload-title-in'); if(!ti.value) ti.value=file.name.replace(/\.[^.]+$/,''); }; fr.readAsText(file); })() : null;
+  const reader = new FileReader();
+  reader.onload = e => {
+    uploadedText = e.target.result;
+    const n = document.getElementById('upload-name');
+    n.textContent = `✓ ${file.name}`; n.style.display = 'block';
+    if (!document.getElementById('upload-title-in').value)
+      document.getElementById('upload-title-in').value = file.name.replace(/\.[^.]+$/, '');
+  };
+  reader.readAsText(file);
 }
 function addLocalText() {
-  const title=document.getElementById('upload-title-in').value.trim(); if(!title){document.getElementById('upload-title-in').focus();return;}
-  const content=uploadedText||document.getElementById('paste-area').value.trim(); if(!content)return;
-  books.push({id:slugify(title),title,author:'',date:'',lang:detectLang(content),genre:'',content,meta:{},source:'local'});
-  uploadedText=''; document.getElementById('upload-title-in').value=''; document.getElementById('paste-area').value=''; document.getElementById('upload-name').style.display='none';
-  refreshUI(); if(books.length===1) selectScope(0);
+  const title = document.getElementById('upload-title-in').value.trim();
+  if (!title) { document.getElementById('upload-title-in').focus(); return; }
+  const content = uploadedText || document.getElementById('paste-area').value.trim();
+  if (!content) return;
+  books.push({ id: slugify(title), title, author: '', date: '', lang: detectLang(content), genre: '', content, meta: {}, source: 'local' });
+  uploadedText = '';
+  document.getElementById('upload-title-in').value = '';
+  document.getElementById('paste-area').value = '';
+  document.getElementById('upload-name').style.display = 'none';
+  refreshUI();
+  if (books.length === 1) selectScope(0);
 }
 
-// ══ SCOPE / SIDEBAR ══
-function selectScope(scope) {
-  activeScope=scope; messages=[]; renderMessages(); showEmptyState(true);
-  refreshUI(); renderMetaPanel();
-  if (typeof scope==='number') { openInReader(scope); if(!readerOpen) toggleReader(); }
+// ── SIDEBAR RENDER ──
+function refreshUI() {
+  renderBooks();
+  updateHeader();
+  updateNotices();
 }
-
-function refreshUI() { renderBooks(); updateChatHeader(); updateNotices(); }
 
 function renderBooks() {
-  const c=document.getElementById('book-items');
-  if (!books.length) { c.innerHTML='<div style="font-size:10px;color:#3a3028;padding:4px 7px;font-family:\'IBM Plex Mono\',monospace;">No texts loaded</div>'; }
-  else { c.innerHTML=books.map((b,i)=>`<div class="book-item ${activeScope===i?'active':''}" onclick="selectScope(${i})"><div class="book-icon">${b.source==='github'?'📜':'📄'}</div><div class="book-meta"><div class="book-title">${esc(b.title)}</div>${b.author?`<div class="book-author">${esc(b.author)}</div>`:''}<div class="book-tags">${b.lang?`<span class="tag ${b.lang}">${b.lang.toUpperCase()}</span>`:''} ${b.date?`<span class="tag">${esc(b.date)}</span>`:''} ${b.genre?`<span class="tag">${esc(b.genre)}</span>`:''}</div></div></div>`).join(''); }
-  document.getElementById('scope-all').classList.toggle('active',activeScope==='all');
+  const container = document.getElementById('book-items');
+  if (books.length === 0) {
+    container.innerHTML = '<div style="font-size:11px;color:#3a3028;padding:4px 8px;font-family:\'IBM Plex Mono\',monospace;">No texts loaded</div>';
+  } else {
+    container.innerHTML = books.map((b, i) => `
+      <div class="book-item ${activeScope === i ? 'active' : ''}" onclick="selectScope(${i})">
+        <div class="book-icon">${b.source === 'github' ? '📜' : '📄'}</div>
+        <div class="book-meta">
+          <div class="book-title">${esc(b.title)}</div>
+          ${b.author ? `<div class="book-author">${esc(b.author)}</div>` : ''}
+          <div class="book-tags">
+            ${b.lang ? `<span class="tag ${b.lang}">${b.lang.toUpperCase()}</span>` : ''}
+            ${b.date ? `<span class="tag">${esc(b.date)}</span>` : ''}
+            ${b.genre ? `<span class="tag">${esc(b.genre)}</span>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+  document.getElementById('scope-all').classList.toggle('active', activeScope === 'all');
 }
 
-function updateChatHeader() {
-  const icon=document.getElementById('chat-header-icon'), title=document.getElementById('chat-header-title'), meta=document.getElementById('chat-header-meta');
-  if (activeScope==='all') { icon.textContent='📚'; title.textContent='Entire Library'; meta.textContent=books.length?`${books.length} text${books.length>1?'s':''} loaded · AI searches across all`:'No texts loaded'; }
-  else { const b=books[activeScope]; icon.textContent='📜'; title.textContent=b.title; meta.textContent=[b.author,b.date,b.lang?.toUpperCase(),b.uri].filter(Boolean).join(' · '); }
+function selectScope(scope) {
+  activeScope = scope;
+  messages = [];
+  refreshUI();
+  renderMessages();
+  showEmptyState(true);
+  renderMetaPanel();
+}
+
+function updateHeader() {
+  const icon = document.getElementById('chat-header-icon');
+  const title = document.getElementById('chat-header-title');
+  const meta = document.getElementById('chat-header-meta');
+  if (activeScope === 'all') {
+    icon.textContent = '📚';
+    title.textContent = 'Entire Library';
+    meta.textContent = books.length === 0 ? 'No texts loaded' : `${books.length} text${books.length > 1 ? 's' : ''} · All languages`;
+  } else {
+    const b = books[activeScope];
+    icon.textContent = '📜';
+    title.textContent = b.title;
+    meta.textContent = [b.author, b.date, b.lang?.toUpperCase(), b.uri].filter(Boolean).join(' · ');
+  }
 }
 
 function updateNotices() {
-  const hasWorker  = !!WORKER_URL;
-  const usingOwn   = activeProvider !== 'anthropic';
-  const hasOwnKey  = usingOwn && !!apiKey;
-  const canChat    = hasWorker && (!usingOwn || hasOwnKey);
-  const hasTexts   = books.length > 0;
-  const keyNotice  = document.getElementById('no-key-notice');
-  const textNotice = document.getElementById('no-text-notice');
-  if (!hasWorker) {
-    keyNotice.style.display = 'block';
-    keyNotice.innerHTML = '⚙ <strong>Cloudflare Worker required.</strong> Deploy worker.js and set WORKER_URL in index.html.';
-    keyNotice.style.cssText = 'display:block;padding:8px 14px;background:#fff3cd;border:1px solid #ffc107;border-radius:6px;font-size:11px;line-height:1.5;color:#856404;margin-bottom:6px;';
-  } else if (usingOwn && !hasOwnKey) {
-    keyNotice.style.display = 'block';
-    keyNotice.innerHTML = '⚠ Enter your ' + (PROVIDER_INFO[activeProvider]||{name:'provider'}).name + ' API key above to chat.';
-    keyNotice.style.cssText = 'display:block;padding:6px 14px;background:#fff3cd;border:1px solid #ffc107;border-radius:6px;font-size:11px;color:#856404;margin-bottom:6px;';
-  } else {
-    keyNotice.style.display = 'none';
-  }
-  textNotice.style.display = (canChat && !hasTexts) ? 'block' : 'none';
-  document.getElementById('send-btn').disabled = !canChat || !hasTexts;
+  const noKey = document.getElementById('no-key-notice');
+  const noText = document.getElementById('no-texts-notice');
+  const hasKey = !!apiKey || !!WORKER_URL;
+  const hasTexts = books.length > 0;
+  noKey.style.display = !hasKey ? 'block' : 'none';
+  noText.style.display = hasKey && !hasTexts ? 'block' : 'none';
+  const sendBtn = document.getElementById('send-btn');
+  sendBtn.disabled = !hasKey || !hasTexts;
 }
 
 function renderMetaPanel() {
-  const panel=document.getElementById('meta-panel');
-  if (activeScope==='all'||typeof activeScope!=='number'){panel.classList.remove('open');return;}
-  const b=books[activeScope],m=b.meta||{};
-  const fields=[['Author',b.author||m.AuthorLat||m.author],['Date',b.date||m.Date||m.date],['Lang',b.lang],['Genre',b.genre||m.Genre||m.genre],['URI',b.uri||m.URI||m.uri],['Editor',m.editor||m.Editor]].filter(([,v])=>v);
-  if (!fields.length){panel.classList.remove('open');return;}
-  panel.innerHTML=fields.map(([k,v])=>`<div class="meta-item"><div class="meta-key">${k}</div><div class="meta-val">${esc(String(v))}</div></div>`).join('');
+  const panel = document.getElementById('meta-panel');
+  if (activeScope === 'all' || typeof activeScope !== 'number') { panel.classList.remove('open'); return; }
+  const b = books[activeScope];
+  const m = b.meta || {};
+  const fields = [
+    ['Author', b.author || m.AuthorLat || m.author],
+    ['Date', b.date || m.Date || m.date],
+    ['Language', b.lang],
+    ['Genre', b.genre || m.Genre || m.genre],
+    ['URI', b.uri || m.URI || m.uri],
+    ['Translator', m.translator || m.Translator],
+    ['Editor', m.editor || m.Editor],
+    ['Publisher', m.publisher || m.Publisher],
+  ].filter(([,v]) => v);
+  if (fields.length === 0) { panel.classList.remove('open'); return; }
+  panel.innerHTML = fields.map(([k, v]) => `<div class="meta-item"><div class="meta-key">${k}</div><div class="meta-val">${esc(String(v))}</div></div>`).join('');
   panel.classList.add('open');
 }
 
-// ══ READER ══
-function toggleReader() {
-  readerOpen=!readerOpen;
-  document.getElementById('reader-panel').classList.toggle('open',readerOpen);
-  document.getElementById('res-right').style.display=readerOpen?'':'none';
-  document.getElementById('open-reader-btn').classList.toggle('active',readerOpen);
-  if (readerOpen && readerBookIdx===null && typeof activeScope==='number') openInReader(activeScope);
-  if (readerOpen) runSearch();
+// ── CHAT MODE ──
+function setMode(m) {
+  chatMode = m;
+  document.getElementById('mode-relevant').classList.toggle('active', m === 'relevant');
+  document.getElementById('mode-full').classList.toggle('active', m === 'full');
 }
 
-function openInReader(idx) {
-  if (idx<0||idx>=books.length) return;
-  readerBookIdx=idx; const b=books[idx];
-  document.getElementById('reader-book-title').textContent=b.title;
-  document.getElementById('reader-book-author').textContent=[b.author,b.date].filter(Boolean).join(' · ');
-  document.getElementById('search-scope-lbl').textContent=b.title;
-
-  const rc=document.getElementById('reader-content');
-  const isRTL=(b.lang==='ar'||b.lang==='fa');
-  rc.className=isRTL?'rtl':'ltr';
-
-  const raw=b.content||'';
-  if (!raw.trim()) { rc.innerHTML='<div id="reader-empty"><div class="icon">📜</div><p>No content loaded for this text.</p></div>'; return; }
-
-  rc.innerHTML = renderOpenITI(raw);
-
-  const q=document.getElementById('search-input').value.trim();
-  if (q) runSearch(); else clearHighlights();
+// ── MESSAGES ──
+function renderMessages() {
+  const wrap = document.getElementById('messages-wrap');
+  wrap.querySelectorAll('.msg').forEach(el => el.remove());
+  messages.forEach(m => wrap.insertBefore(buildMsgEl(m), document.getElementById('typing')));
+  wrap.scrollTop = wrap.scrollHeight;
 }
 
-// ══ OpenITI mARkdown Renderer ══
-function renderOpenITI(raw) {
-  const lines = raw.split('\n');
-  let html = '';
-  let poetryBuffer = [];
-  let paraBuffer   = [];
-
-  function flushPara() {
-    if (!paraBuffer.length) return;
-    html += '<p class="oiti-para">' + paraBuffer.join(' ') + '</p>';
-    paraBuffer = [];
-  }
-  function flushPoetry() {
-    if (!poetryBuffer.length) return;
-    flushPara();
-    html += '<div class="oiti-poetry">';
-    for (let i = 0; i < poetryBuffer.length; i += 2) {
-      const s1 = poetryBuffer[i]   || '';
-      const s2 = poetryBuffer[i+1] || '';
-      if (s2) {
-        // Two hemistichs with traditional ❧ separator in the centre
-        html += '<div class="oiti-bayt">'
-              + '<span class="s2">'+s2+'</span>'
-              + '<span class="bayt-sep">❧</span>'
-              + '<span class="s1">'+s1+'</span>'
-              + '</div>';
-      } else {
-        // Single hemistich — centred
-        html += '<div class="oiti-bayt" style="justify-content:center;">'
-              + '<span class="s1" style="flex:none;text-align:center;">'+s1+'</span>'
-              + '</div>';
-      }
-    }
-    html += '</div>';
-    poetryBuffer = [];
-  }
-
-  // Strip all pipe characters used as OpenITI formatting markers
-  function stripPipes(s) { return s.replace(/\|/g, '').trim(); }
-
-  // Strip milestone tags: ms followed by digits anywhere in a string, e.g. ms039
-  function stripMilestones(s) { return s.replace(/\bms\d+\b/gi, '').trim(); }
-
-  // Strip inline page markers from text (PageV0MP001 etc) — render as badge
-  function extractPageBadges(s) {
-    return s.replace(/PageV(\d+|0M)P(\d+)\b/g, function(m, v, p) {
-      const volLabel = v === '0M' ? 'Intro' : 'Vol.' + parseInt(v);
-      return '<span class="oiti-page">' + volLabel + ' p.' + parseInt(p) + '</span>';
-    });
-  }
-
-  // Clean a text string: strip pipes, milestones, then extract page badges
-  function clean(s) {
-    return extractPageBadges(stripMilestones(stripPipes(esc(s))));
-  }
-
-  lines.forEach(function(line) {
-    const t = line.trim();
-
-    // ── 1. Entirely skip: blank, header-end, OpenITI root tag ──
-    if (t === '' || t === '#META#Header#End#' || /^#{6}OpenITI#/.test(t)) return;
-
-    // ── 2. Skip META values that are NODATA / NOTGIVEN / NOCODE ──
-    if (/^#META#/.test(t)) {
-      const m = t.match(/::(.+)/);
-      if (m) {
-        const val = m[1].trim();
-        if (val && val !== 'NODATA' && val !== 'NOTGIVEN' && val !== 'NOCODE') {
-          flushPoetry(); flushPara();
-          html += '<span class="oiti-ms">' + esc(val) + '</span>';
-        }
-      }
-      return;
-    }
-
-    // ── 3. Skip subject/bibliography and similar tag-only lines ──
-    //    e.g. #####SUBJECT#BIBLIOGRAPHY#  or  ##SUBJECT#BIBLIOGRAPHY#
-    if (/^#{2,}[A-Z#]+$/.test(t)) return;
-
-    // ── 4. Section/book tags: ###WORD# TAG : value  (e.g. ###BOOK# ...) ──
-    if (/^###\w+#/.test(t)) {
-      const m = t.match(/:(.+)/);
-      if (m) {
-        flushPoetry(); flushPara();
-        html += '<div class="oiti-head2">' + clean(m[1].trim()) + '</div>';
-      }
-      return;
-    }
-
-    // ── 5. Headings: ### followed by | text | or || text || ──
-    //    Strip surrounding pipes but keep the text inside
-    if (/^###/.test(t)) {
-      flushPoetry(); flushPara();
-      const inner = t.replace(/^###\s*/, '');
-      // Strip leading || for h2, | for h1, and any trailing |
-      if (/^\|\|/.test(inner)) {
-        html += '<div class="oiti-head2">' + clean(inner.replace(/^\|+|\|+$/g, '')) + '</div>';
-      } else if (/^\|/.test(inner)) {
-        html += '<div class="oiti-head1">' + clean(inner.replace(/^\|+|\|+$/g, '')) + '</div>';
-      } else {
-        html += '<div class="oiti-head1">' + clean(inner) + '</div>';
-      }
-      return;
-    }
-
-    // ── 6. Single # alone — paragraph break, hidden ──
-    if (/^#\s*$/.test(t)) {
-      flushPoetry(); flushPara();
-      return;
-    }
-
-    // ── 7. # followed by text — new paragraph ──
-    if (/^#\s+/.test(t)) {
-      flushPoetry(); flushPara();
-      const rest = t.replace(/^#\s+/, '').trim();
-      if (rest) paraBuffer.push(clean(rest));
-      return;
-    }
-
-    // ── 8. ~~ continuation line — join to current paragraph ──
-    if (/^~~/.test(t)) {
-      const rest = t.replace(/^~~/, '').trim();
-      if (rest) paraBuffer.push(clean(rest));
-      return;
-    }
-
-    // ── 9. Poetry: hemistich %~% hemistich  (also handles % % variant)
-    // Each line is one bayt with two hemistichs separated by %~% or % %
-    if (t.includes('%~%') || /% %/.test(t)) {
-      flushPara();
-      // Split on %~% first, then fall back to % % (with spaces)
-      const sep = t.includes('%~%') ? '%~%' : '% %';
-      const parts = t.split(sep).map(function(s){ return clean(s.trim()); }).filter(Boolean);
-      // Each part is one hemistich — push both so flushPoetry pairs them
-      parts.forEach(function(p){ poetryBuffer.push(p); });
-      return;
-    }
-
-    // ── 10. Standalone page markers (entire line is a page ref) ──
-    //    Handles standard PageV01P003 AND intro pages PageV0MP001
-    if (/^PageV(\d+|0M)P\d+/.test(t)) {
-      flushPoetry(); flushPara();
-      html += extractPageBadges(esc(t));
-      return;
-    }
-
-    // ── 11. Tilde section break (3+ tildes alone) ──
-    if (/^~{3,}$/.test(t)) {
-      flushPoetry(); flushPara();
-      html += '<hr style="border:none;border-top:1px dashed var(--border);margin:14px 0;">';
-      return;
-    }
-
-    // ── 12. Milestone tags on their own line: ms039 ──
-    if (/^ms\d+$/i.test(t)) return;
-
-    // ── 13. Everything else: regular text ──
-    flushPoetry();
-    paraBuffer.push(clean(t));
-  });
-
-  flushPoetry();
-  flushPara();
-  return html || '<p class="oiti-para">' + esc(raw) + '</p>';
+function buildMsgEl(m) {
+  const div = document.createElement('div');
+  div.className = `msg ${m.role}`;
+  const label = document.createElement('div');
+  label.className = 'msg-label';
+  label.textContent = m.role === 'user' ? 'You' : 'Alamut Library';
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  bubble.innerHTML = m.role === 'assistant' ? formatResponse(m.content) : esc(m.content);
+  div.appendChild(label);
+  div.appendChild(bubble);
+  return div;
 }
 
-// Opens a book and highlights match at charIndex
-function openInReaderAtMatch(bookIdx, charIndex) {
-  openInReader(bookIdx);
-  const optAll = document.getElementById('opt-all');
-  if (optAll.checked) { optAll.checked=false; syncToggle('lbl-all','opt-all'); }
-  const q = document.getElementById('search-input').value.trim();
-  if (q) { setTimeout(function(){ runSearch(); if(searchHits.length){searchHitIdx=0;activateHit(0);} }, 80); }
-}
-
-// ══ SEARCH ══
-function onSearchInput() { clearTimeout(searchTimer); searchTimer=setTimeout(runSearch,220); }
-
-function runSearch() {
-  const query    = document.getElementById('search-input').value;
-  const useRegex = document.getElementById('opt-regex').checked;
-  const useCase  = false; // Case toggle removed — always case-insensitive for Arabic/Persian
-  const allTexts = document.getElementById('opt-all').checked;
-  const countEl  = document.getElementById('search-count');
-  const si       = document.getElementById('search-input');
-
-  clearHighlights(); searchHits=[]; searchHitIdx=-1; updateNavBtns();
-  if (!query.trim()) { countEl.textContent=''; return; }
-
-  let pattern;
-  try {
-    pattern=useRegex ? new RegExp(query,useCase?'g':'gi') : new RegExp(escapeRe(query),useCase?'g':'gi');
-    si.classList.remove('invalid');
-  } catch(e) { si.classList.add('invalid'); countEl.textContent='Invalid regex'; return; }
-
-  if (allTexts) searchAllTexts(pattern); else searchCurrentText(pattern);
-}
-
-function searchCurrentText(pattern) {
-  const rc=document.getElementById('reader-content');
-  const countEl=document.getElementById('search-count');
-  if (!rc.querySelector('p')) { countEl.textContent='No text open'; return; }
-
-  rc.querySelectorAll('p').forEach(p=>{
-    // Work on text content only, respecting <br> tags
-    const walker=document.createTreeWalker(p,NodeFilter.SHOW_TEXT);
-    const nodes=[];
-    let node; while(node=walker.nextNode()) nodes.push(node);
-    nodes.forEach(tn=>{
-      const text=tn.textContent;
-      const newHtml=text.replace(pattern,m=>`<mark class="hit">${esc(m)}</mark>`);
-      if (newHtml!==esc(text)) {
-        const span=document.createElement('span');
-        span.innerHTML=newHtml;
-        tn.parentNode.replaceChild(span,tn);
-      }
-    });
-  });
-
-  searchHits=Array.from(rc.querySelectorAll('mark.hit'));
-  const n=searchHits.length;
-  countEl.textContent=n?`${n} match${n!==1?'es':''}`:'No matches';
-  if (n>0){searchHitIdx=0;activateHit(0);}
-  updateNavBtns();
-}
-
-function searchAllTexts(pattern) {
-  const countEl=document.getElementById('search-count');
-  let total=0; const results=[];
-  books.forEach((b,i)=>{
-    const re=new RegExp(pattern.source,pattern.flags);
-    const ms=[...(b.content||'').matchAll(re)];
-    if (ms.length){total+=ms.length;results.push({i,title:b.title,count:ms.length,matches:ms,content:b.content});}
-  });
-  countEl.textContent=total?`${total} match${total!==1?'es':''} across ${results.length} text${results.length!==1?'s':''}`:'No matches in any text';
-
-  const rc=document.getElementById('reader-content');
-  rc.className='ltr';
-  if (!results.length) { rc.innerHTML='<div id="reader-empty"><div class="icon">🔍</div><p>No matches found across '+books.length+' loaded texts.</p></div>'; return; }
-
-  readerSnippets = [];
-
-  rc.innerHTML=results.map(function(r){
-    const snippetHtml=r.matches.slice(0,5).map(function(m){
-      const s=Math.max(0,m.index-100), e=Math.min(r.content.length,m.index+m[0].length+100);
-      const rawSnip=r.content.slice(s,e);
-      const flags=pattern.flags.includes('g')?pattern.flags:pattern.flags+'g';
-      const hi=esc(rawSnip).replace(new RegExp(escapeRe(esc(m[0])),flags.replace('g','')),function(match){return '<mark class="hit">'+match+'</mark>';});
-      const snippetIdx = readerSnippets.length;
-      readerSnippets.push(rawSnip);
-      return '<div class="search-snippet" onclick="openInReaderAtMatch('+r.i+','+m.index+')">'
-        +(s>0?'<span style="color:var(--muted)">…</span>':'')+hi+(e<r.content.length?'<span style="color:var(--muted)">…</span>':'')
-        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px;">'
-        +'<div class="search-snippet-hint">↗ click to open in reader</div>'
-        +'<button class="snippet-ai-btn" onclick="event.stopPropagation();translateSnippet('+snippetIdx+')">🌐 Translate</button>'
-        +'</div>'
-        +'</div>';
-    }).join('');
-    return '<div style="margin-bottom:22px;">'
-      +'<div onclick="openInReader('+r.i+')" style="font-family:Libre Franklin,sans-serif;font-size:13px;font-weight:700;cursor:pointer;color:var(--gold-dim);padding-bottom:5px;">'
-      +esc(r.title)+' <span style="font-size:10px;font-family:IBM Plex Mono,monospace;color:var(--muted);font-weight:400;">'+r.count+' hit'+(r.count!==1?'s':'')+' · open text</span></div>'
-      +snippetHtml
-      +(r.matches.length>5?'<div style="font-size:10px;color:var(--muted);margin-top:4px;">…and '+(r.matches.length-5)+' more</div>':'')
-      +'</div>';
-  }).join('');
-
-  searchHits=Array.from(rc.querySelectorAll('mark.hit')); updateNavBtns();
-  if (searchHits.length){searchHitIdx=0;activateHit(0);}
-}
-
-function clearHighlights() {
-  const rc=document.getElementById('reader-content');
-  rc.querySelectorAll('mark.hit').forEach(m=>{ const t=document.createTextNode(m.textContent); m.parentNode.replaceChild(t,m); });
-  rc.querySelectorAll('p,span').forEach(el=>{ if(el.childNodes.length===1&&el.childNodes[0].nodeType===3&&el.tagName==='SPAN'&&!el.className){const t=document.createTextNode(el.textContent);el.parentNode.replaceChild(t,el);} });
-}
-
-function activateHit(idx) {
-  searchHits.forEach((h,i)=>h.classList.toggle('active',i===idx));
-  if (searchHits[idx]) searchHits[idx].scrollIntoView({behavior:'smooth',block:'center'});
-  const n=searchHits.length; document.getElementById('search-count').textContent=n?`${idx+1} / ${n} match${n!==1?'es':''}`:'No matches';
-}
-
-function navHit(dir) { if (!searchHits.length) return; searchHitIdx=(searchHitIdx+dir+searchHits.length)%searchHits.length; activateHit(searchHitIdx); }
-function updateNavBtns() { const h=searchHits.length>0; document.getElementById('nav-prev').disabled=!h; document.getElementById('nav-next').disabled=!h; }
-function searchKeyNav(e) { if(e.key==='Enter'){e.shiftKey?navHit(-1):navHit(+1);e.preventDefault();} if(e.key==='Escape'){document.getElementById('search-input').value='';runSearch();} }
-function syncToggle(lblId,inputId) { document.getElementById(lblId).classList.toggle('on',document.getElementById(inputId).checked); }
-
-// ══ CHAT MODE ══
-function setMode(m) { chatMode=m; document.getElementById('mode-relevant').classList.toggle('active',m==='relevant'); document.getElementById('mode-full').classList.toggle('active',m==='full'); }
-
-// ══ MESSAGES ══
-function renderMessages() { const wrap=document.getElementById('messages-wrap'); wrap.querySelectorAll('.msg').forEach(el=>el.remove()); messages.forEach(m=>wrap.insertBefore(buildMsgEl(m),document.getElementById('typing'))); wrap.scrollTop=wrap.scrollHeight; }
-function buildMsgEl(m) { const div=document.createElement('div'); div.className=`msg ${m.role}`; const label=document.createElement('div'); label.className='msg-label'; label.textContent=m.role==='user'?'You':'Alamut Library'; const bubble=document.createElement('div'); bubble.className='msg-bubble'; bubble.innerHTML=m.role==='assistant'?formatResponse(m.content):esc(m.content); div.appendChild(label); div.appendChild(bubble); return div; }
 function formatResponse(text) {
-  let html=text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
-  html=html.split('\n').map(line=>{ const n=(line.match(/[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/g)||[]).length; return (n>5&&n>line.length*0.3)?`<div class="rtl-passage">${line}</div>`:line; }).join('\n');
-  return html.split('\n\n').map(p=>p.startsWith('<div')?p:`<p>${p.replace(/\n/g,'<br>')}</p>`).join('');
+  // Detect Arabic/Persian blocks (Unicode ranges) and wrap in RTL div
+  let html = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+
+  // Wrap lines that are mostly Arabic/Persian script in RTL span
+  html = html.split('\n').map(line => {
+    const arabicCount = (line.match(/[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/g) || []).length;
+    if (arabicCount > 5 && arabicCount > line.length * 0.3)
+      return `<div class="rtl-passage">${line}</div>`;
+    return line;
+  }).join('\n');
+
+  return html.split('\n\n').map(p => p.startsWith('<div') ? p : `<p>${p.replace(/\n/g,'<br>')}</p>`).join('');
 }
-function showEmptyState(show) { const el=document.getElementById('empty-state'); if(el) el.style.display=(show&&!messages.length)?'':'none'; }
-function appendMsg(m) { messages.push(m); const wrap=document.getElementById('messages-wrap'); showEmptyState(false); wrap.insertBefore(buildMsgEl(m),document.getElementById('typing')); wrap.scrollTop=wrap.scrollHeight; }
-// ══ SEND ══
+
+function showEmptyState(show) {
+  const el = document.getElementById('empty-state');
+  if (el) el.style.display = show && messages.length === 0 ? '' : 'none';
+}
+
+function appendMsg(m) {
+  messages.push(m);
+  const wrap = document.getElementById('messages-wrap');
+  showEmptyState(false);
+  wrap.insertBefore(buildMsgEl(m), document.getElementById('typing'));
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+// ── SENDING ──
 async function sendMessage() {
   if (isLoading) return;
-  const input=document.getElementById('chat-input'), text=input.value.trim();
-  if (!text||!books.length||(!apiKey&&!WORKER_URL)) return;
-  input.value=''; autoResize(input);
-  appendMsg({role:'user',content:text});
-  showTyping(true); isLoading=true;
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || books.length === 0) return;
+  if (!apiKey && !WORKER_URL) return;
+
+  input.value = '';
+  autoResize(input);
+  appendMsg({ role: 'user', content: text });
+  showTyping(true);
+  isLoading = true;
+
   try {
-    const reply = await callClaudeWithRetry(text, buildContext(text));
-    appendMsg({role:'assistant',content:reply});
+    const context = buildContext(text);
+    const reply = await callClaude(text, context);
+    appendMsg({ role: 'assistant', content: reply });
   } catch(e) {
-    const msg = e.message.toLowerCase().includes('overload')
-      ? 'The AI is currently busy due to high demand. Please try again in a moment.'
-      : 'Error: ' + e.message;
-    appendMsg({role:'assistant',content:msg});
+    appendMsg({ role: 'assistant', content: `Error: ${e.message}` });
   }
-  showTyping(false); isLoading=false;
-  document.getElementById('messages-wrap').scrollTop=999999;
+
+  showTyping(false);
+  isLoading = false;
+  document.getElementById('messages-wrap').scrollTop = 999999;
 }
-async function callClaudeWithRetry(userText, context, attempt=1) {
-  try {
-    return await callClaude(userText, context);
-  } catch(e) {
-    if (e.message.toLowerCase().includes('overload') && attempt < 3) {
-      const wait = attempt * 5;
-      const t = document.getElementById('typing');
-      const orig = t.innerHTML;
-      let remaining = wait;
-      const countdown = setInterval(() => {
-        t.innerHTML = '<span style="font-size:12px;font-family:IBM Plex Mono,monospace;color:var(--muted);">API busy — retrying in ' + remaining + 's…</span>';
-        remaining--;
-        if (remaining < 0) { clearInterval(countdown); t.innerHTML = orig; }
-      }, 1000);
-      await new Promise(r => setTimeout(r, wait * 1000));
-      clearInterval(countdown);
-      t.innerHTML = orig;
-      return callClaudeWithRetry(userText, context, attempt + 1);
-    }
-    throw e;
-  }
+
+function useChip(el) {
+  if (books.length === 0) return;
+  document.getElementById('chat-input').value = el.textContent;
+  sendMessage();
 }
-function useChip(el) { if(!books.length)return; document.getElementById('chat-input').value=el.textContent; sendMessage(); }
 
 function buildContext(query) {
-  // Single text + Full mode: send as much of the text as possible
-  if (activeScope !== 'all') {
-    const b = books[activeScope];
-    if (chatMode === 'full') {
-      return '=== ' + b.title + (b.author ? ' | ' + b.author : '') + ' ===\n' + b.content.slice(0, 100000);
+  const targetBooks = activeScope === 'all' ? books : [books[activeScope]];
+
+  if (chatMode === 'full') {
+    // Send full texts, capped at 100k chars total
+    let ctx = '';
+    for (const b of targetBooks) {
+      const header = `=== ${b.title}${b.author ? ' | ' + b.author : ''}${b.date ? ' | ' + b.date : ''} ===\n`;
+      const remaining = 100000 - ctx.length - header.length;
+      if (remaining <= 0) break;
+      ctx += header + b.content.slice(0, remaining) + '\n\n';
     }
-    const kw = extractKeywords(query);
-    const passages = findRelevantPassages(b.content, kw, 6, 800);
-    let ctx = '=== ' + b.title + (b.author ? ' | ' + b.author : '') + ' ===\n';
-    passages.forEach(function(p, i){ ctx += '[Passage ' + (i+1) + ']\n' + p + '\n\n'; });
     return ctx;
   }
 
-  // ── ENTIRE LIBRARY MODE: cross-corpus RAG ──
-  // Step 1: score every paragraph in every book against the query
-  const kw = extractKeywords(query);
-
-  // For Arabic/Persian queries, also use the raw query words as patterns
-  const queryWords = query.trim().split(/\s+/).filter(function(w){ return w.length > 1; });
-  const allPatterns = kw.concat(queryWords);
-
-  if (!allPatterns.length) {
-    // No keywords — return cleaned body text of first few books
-    return books.slice(0, 5).map(function(b){
-      const lines = (b.content || '').split('\n');
-      const bodyLines = lines.filter(function(l){
-        const t = l.trim();
-        return t && !t.startsWith('#META#') && !t.startsWith('#####') && !t.startsWith('######') && t !== '#META#Header#End#';
-      });
-      const bodyText = bodyLines.join(' ').replace(/^#+\s*/gm,'').replace(/~~|\|/g,'').slice(0, 1500);
-      return '=== ' + b.title + ' ===\n' + bodyText;
-    }).join('\n\n');
-  }
-
-  // Strip OpenITI markup from a paragraph before scoring/sending
-  function cleanPara(p) {
-    return p
-      .replace(/^#META#.*$/gm, '')       // remove all META lines
-      .replace(/^#{2,}[^\n]*/gm, '')    // remove ##TAG# lines
-      .replace(/^######OpenITI#.*$/gm,'')// remove OpenITI root tag
-      .replace(/^#\s*$/gm, '')          // remove lone # paragraph markers
-      .replace(/^#\s+/gm, '')           // remove leading # from paragraphs
-      .replace(/^~~/gm, '')              // remove ~~ continuation markers
-      .replace(/PageV[\dM]+P\d+/g, '') // remove page markers
-      .replace(/\bms\d+\b/gi, '')     // remove milestone tags
-      .replace(/\|/g, '')               // remove pipes
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
-
-  // Score paragraphs across all books
-  const scored = [];
-  books.forEach(function(b, bookIdx) {
-    if (!b.content) return;
-    // Split on blank lines or OpenITI paragraph markers
-    const rawParas = b.content.split(/\n{2,}|\n(?=# )|\n(?=##)/)
-      .map(function(p){ return p.trim(); })
-      .filter(function(p){ return p.length > 20; });
-
-    rawParas.forEach(function(rawPara) {
-      // Skip metadata blocks entirely — don't score them
-      if (/^#META#/.test(rawPara.trim())) return;
-      if (/^#{5,}/.test(rawPara.trim())) return;
-      if (/^######OpenITI/.test(rawPara.trim())) return;
-      if (/^#META#Header#End#/.test(rawPara.trim())) return;
-
-      const para = cleanPara(rawPara);
-      if (para.length < 20) return; // skip if nothing left after cleaning
-
-      let score = 0;
-      allPatterns.forEach(function(kw) {
-        try {
-          const re = new RegExp(kw, 'gi');
-          const hits = (para.match(re) || []).length;
-          score += hits * (kw.length > 3 ? 2 : 1);
-        } catch(e) {}
-      });
-      if (score > 0) {
-        // Store cleaned para for context, but also keep raw for display
-        scored.push({ bookIdx: bookIdx, title: b.title, author: b.author, para: para, score: score });
-      }
-    });
-  });
-
-  // Step 2: sort by score, deduplicate by book (max 3 passages per book)
-  scored.sort(function(a, b){ return b.score - a.score; });
-
-  const bookCounts = {};
-  const selected = [];
-  const MAX_PASSAGES = 18;
-  const MAX_PER_BOOK = 3;
-
-  for (let i = 0; i < scored.length && selected.length < MAX_PASSAGES; i++) {
-    const item = scored[i];
-    bookCounts[item.bookIdx] = (bookCounts[item.bookIdx] || 0);
-    if (bookCounts[item.bookIdx] < MAX_PER_BOOK) {
-      selected.push(item);
-      bookCounts[item.bookIdx]++;
-    }
-  }
-
-  // Step 3: group by book and build context string
-  if (!selected.length) {
-    // Nothing matched — return cleaned openings of first 5 books, skipping metadata
-    return books.slice(0, 5).map(function(b){
-      const lines = (b.content || '').split('\n');
-      const bodyLines = lines.filter(function(l){
-        const t = l.trim();
-        return t && !t.startsWith('#META#') && !t.startsWith('#####') && !t.startsWith('######') && t !== '#META#Header#End#';
-      });
-      const bodyText = bodyLines.join(' ').replace(/^#+\s*/gm,'').replace(/~~|\|/g,'').slice(0, 1000);
-      return '=== ' + b.title + (b.author ? ' | ' + b.author : '') + ' ===\n' + bodyText;
-    }).join('\n\n');
-  }
-
-  // Group passages by book
-  const byBook = {};
-  selected.forEach(function(item) {
-    if (!byBook[item.bookIdx]) byBook[item.bookIdx] = { title: item.title, author: item.author, passages: [] };
-    byBook[item.bookIdx].passages.push(item.para.slice(0, 600));
-  });
-
+  // RELEVANT PASSAGES MODE: extract keyword-matched chunks
+  const keywords = extractKeywords(query);
   let ctx = '';
-  Object.keys(byBook).forEach(function(idx) {
-    const bk = byBook[idx];
-    ctx += '=== ' + bk.title + (bk.author ? ' | ' + bk.author : '') + ' ===\n';
-    bk.passages.forEach(function(p, i){ ctx += '[Passage ' + (i+1) + ']\n' + p + '\n\n'; });
+  for (const b of targetBooks) {
+    const passages = findRelevantPassages(b.content, keywords, 4, 600);
+    if (passages.length === 0) continue;
+    ctx += `=== ${b.title}${b.author ? ' | ' + b.author : ''} ===\n`;
+    passages.forEach((p, i) => { ctx += `[Passage ${i+1}]\n${p}\n\n`; });
+  }
+  return ctx || targetBooks.map(b => b.content.slice(0, 3000)).join('\n\n');
+}
+
+function extractKeywords(query) {
+  // Strip common English stop words, keep meaningful terms
+  const stop = new Set(['what','are','the','is','a','an','of','in','to','and','or','for','with','about','how','who','when','where','why','this','that','these','those','it','its','on','at','by','from','as','be','was','were','been','have','has','had','do','does','did','will','would','could','should','may','might','can','find','tell','me','show','give','list','describe']);
+  return query.toLowerCase().split(/\W+/).filter(w => w.length > 2 && !stop.has(w));
+}
+
+function findRelevantPassages(text, keywords, maxPassages, windowSize) {
+  if (!text || keywords.length === 0) return [text.slice(0, windowSize)];
+  const words = text.split(/\s+/);
+  const scores = new Float32Array(words.length);
+
+  // Score each position by keyword proximity
+  keywords.forEach(kw => {
+    const re = new RegExp(kw, 'i');
+    words.forEach((w, i) => { if (re.test(w)) { for (let j = Math.max(0,i-20); j < Math.min(words.length,i+20); j++) scores[j] += 1 / (Math.abs(j-i)+1); } });
   });
 
-  // Cap total context at ~120k chars
-  return ctx.slice(0, 120000);
-}
-
-function extractKeywords(q) {
-  const stop = new Set(['what','are','the','is','a','an','of','in','to','and','or','for','with','about','how','who','when','where','why','this','that','these','those','it','its','on','at','by','from','as','be','was','were','been','have','has','had','do','does','did','will','would','could','should','may','might','can','find','tell','me','show','give','list','describe','translate','summarise','summarize','explain']);
-  return q.toLowerCase().split(/\W+/).filter(function(w){ return w.length > 2 && !stop.has(w); });
-}
-
-function findRelevantPassages(text,kw,maxP,wSize) {
-  if(!text||!kw.length) return [text.slice(0,wSize)];
-  const words=text.split(/\s+/),scores=new Float32Array(words.length);
-  kw.forEach(function(k){const re=new RegExp(k,'i');words.forEach(function(w,i){if(re.test(w))for(let j=Math.max(0,i-20);j<Math.min(words.length,i+20);j++)scores[j]+=1/(Math.abs(j-i)+1);});});
-  const cw=Math.floor(wSize/6),passages=[],used=new Set();
-  for(let p=0;p<maxP;p++){let bI=-1,bS=-1;for(let i=0;i<=words.length-cw;i+=Math.floor(cw/2)){if(used.has(Math.floor(i/cw)))continue;const s=scores.slice(i,i+cw).reduce(function(a,b){return a+b;},0);if(s>bS){bS=s;bI=i;}}if(bI<0||bS===0)break;used.add(Math.floor(bI/cw));passages.push(words.slice(bI,bI+cw).join(' '));}
-  return passages.length?passages:[words.slice(0,cw).join(' ')];
-}
-async function callClaude(userText, context) {
-  if (!WORKER_URL) {
-    throw new Error('Cloudflare Worker not configured. Please deploy worker.js and set WORKER_URL in index.html.');
+  // Find top-scoring windows
+  const chunkWords = Math.floor(windowSize / 6);
+  const passages = [];
+  const used = new Set();
+  for (let p = 0; p < maxPassages; p++) {
+    let bestI = -1, bestScore = -1;
+    for (let i = 0; i <= words.length - chunkWords; i += Math.floor(chunkWords/2)) {
+      if (used.has(Math.floor(i/chunkWords))) continue;
+      const s = scores.slice(i, i+chunkWords).reduce((a,b)=>a+b,0);
+      if (s > bestScore) { bestScore = s; bestI = i; }
+    }
+    if (bestI < 0 || bestScore === 0) break;
+    used.add(Math.floor(bestI/chunkWords));
+    passages.push(words.slice(bestI, bestI+chunkWords).join(' '));
   }
-  const isAllMode = activeScope === 'all';
-  const systemPrompt = 'You are a scholarly assistant for the Alamut Library, a Digital Library of Ismaili Texts ' +
-    'specialising in Arabic and Persian Ismaili literature, theology, philosophy, and poetry.\n\n' +
-    (isAllMode
-      ? 'The library contains ' + books.length + ' texts. You have been provided with the most relevant passages ' +
-        'retrieved from across the entire corpus based on the user\'s question. ' +
-        'Always cite which text (title and author) a passage comes from in your answer.\n\n'
-      : '') +
-    'Your role:\n' +
-    '- Answer questions accurately based on the provided text passages\n' +
-    '- Always cite which text a passage comes from\n' +
-    '- Handle Arabic and Persian source texts with scholarly care\n' +
-    '- When quoting Arabic or Persian, preserve the script and provide a translation\n' +
-    '- If a question cannot be answered from the provided passages, say so clearly\n' +
-    '- Maintain an academic but accessible tone; respond in English unless asked otherwise\n\n' +
-    (context ? 'TEXT CONTEXT:\n' + context : 'No text context provided.');
+  return passages.length > 0 ? passages : [words.slice(0, chunkWords).join(' ')];
+}
 
-  const provider = activeProvider || 'anthropic';
-  const info     = PROVIDER_INFO[provider] || PROVIDER_INFO['anthropic'];
-  const apiMsgs  = [
+async function callClaude(userText, context) {
+  const systemPrompt = `You are a scholarly assistant for the Alamut Library, a Digital Library of Ismaili Texts. The library specialises in Arabic and Persian Ismaili literature, theology, philosophy, and poetry.
+
+You have been provided with excerpts or full texts from this library. Your role is to:
+- Answer questions accurately based on the provided text passages
+- Handle Arabic and Persian source texts with scholarly care
+- When quoting original Arabic or Persian, preserve the original script and provide a translation
+- Note if a question cannot be answered from the provided passages
+- Maintain an academic but accessible tone
+- The interface is in English; respond in English unless the user requests otherwise
+
+${context ? 'TEXT CONTEXT:\n' + context : 'No text context provided.'}`;
+
+  const apiMessages = [
     ...messages.slice(-8).map(m => ({ role: m.role, content: m.content })),
     { role: 'user', content: userText }
   ];
 
-  const res = await fetch(WORKER_URL + '/v1/messages', {
+  // If WORKER_URL is set, proxy through Cloudflare Worker (key stays secret)
+  const endpoint = WORKER_URL
+    ? `${WORKER_URL}/v1/messages`
+    : 'https://api.anthropic.com/v1/messages';
+
+  const headers = { 'Content-Type': 'application/json' };
+  if (!WORKER_URL) headers['x-api-key'] = apiKey;
+
+  const response = await fetch(endpoint, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key':  apiKey,
-      'X-Provider': provider,
-      'X-Model':    info.model,
-    },
+    headers,
     body: JSON.stringify({
-      model:      info.model,
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 1000,
-      system:     systemPrompt,
-      messages:   apiMsgs
+      system: systemPrompt,
+      messages: apiMessages
     })
   });
-  if (!res.ok) {
-    const e = await res.json().catch(() => ({}));
-    throw new Error(e.error ? (e.error.message || JSON.stringify(e.error)) : 'HTTP ' + res.status);
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error?.message || `HTTP ${response.status}`);
   }
-  const data = await res.json();
-  return data.content
-    ? data.content.map(function(b){ return b.text || ''; }).join('')
-    : (data.choices ? data.choices[0].message.content : 'No response');
+  const data = await response.json();
+  return data.content.map(b => b.text || '').join('');
 }
 
-// ══ DRAG RESIZERS ══
-function startResize(e, elId, side) {
-  e.preventDefault();
-  const el=document.getElementById(elId), startX=e.clientX, startW=el.offsetWidth;
-  const resId=side==='left'?'res-left':'res-right';
-  document.getElementById(resId).classList.add('dragging');
-  const onMove=ev=>{
-    const delta=ev.clientX-startX;
-    if(side==='left') el.style.width=Math.max(200,Math.min(420,startW+delta))+'px';
-    else              el.style.width=Math.max(260,Math.min(700,startW-delta))+'px';
-  };
-  const onUp=()=>{ document.getElementById(resId).classList.remove('dragging'); document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp); };
-  document.addEventListener('mousemove',onMove); document.addEventListener('mouseup',onUp);
+// ── UTILS ──
+function showTyping(show) {
+  const t = document.getElementById('typing');
+  t.style.display = show ? 'flex' : 'none';
+  if (show) document.getElementById('messages-wrap').scrollTop = 999999;
 }
-
-// ══ UTILS ══
-function showTyping(show) { const t=document.getElementById('typing'); t.style.display=show?'flex':'none'; if(show)document.getElementById('messages-wrap').scrollTop=999999; }
-function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
-function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,110)+'px'; }
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
-function slugify(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
-function setStatus(id,msg,cls) { const el=document.getElementById(id); el.textContent=msg; el.className='sb-status '+cls; }
-function detectLang(text) { if(!text)return''; const ar=(text.match(/[\u0600-\u06FF]/g)||[]).length,fa=(text.match(/[\u067E\u0686\u06AF\u06CC]/g)||[]).length; if(ar<10)return'en'; return fa>ar*0.05?'fa':'ar'; }
-
-
-// ══ READER AI POPUP ══
-let readerSelectedText = '';
-let readerAIPopup = null;
-let readerSnippets = [];
-
-// Show popup on text selection within reader
-document.addEventListener('mouseup', function(e) {
-  const popup = document.getElementById('reader-ai-popup');
-  const rc    = document.getElementById('reader-content');
-
-  // If click was on popup itself, do nothing
-  if (popup && popup.contains(e.target)) return;
-
-  const sel  = window.getSelection();
-  const text = sel ? sel.toString().trim() : '';
-
-  if (text.length > 3 && rc && rc.contains(sel.anchorNode)) {
-    readerSelectedText = text;
-    const range = sel.getRangeAt(0);
-    const rect  = range.getBoundingClientRect();
-    popup.style.display = 'flex';
-    // Position above the selection, centred
-    let left = rect.left + (rect.width / 2) - 80;
-    let top  = rect.top + window.scrollY - popup.offsetHeight - 8;
-    // Keep within viewport
-    left = Math.max(8, Math.min(left, window.innerWidth - 176));
-    if (top < 8) top = rect.bottom + window.scrollY + 8;
-    popup.style.left = left + 'px';
-    popup.style.top  = top  + 'px';
-  } else {
-    if (popup && !popup.contains(e.target)) popup.style.display = 'none';
-  }
-});
-
-// Hide popup on scroll or Escape
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    document.getElementById('reader-ai-popup').style.display = 'none';
-  }
-});
-document.getElementById('reader-content') && document.addEventListener('scroll', function() {
-  document.getElementById('reader-ai-popup').style.display = 'none';
-}, true);
-
-function readerAIAction(action) {
-  document.getElementById('reader-ai-popup').style.display = 'none';
-  const text = readerSelectedText;
-  if (!text) return;
-
-  let prompt, label;
-  if (action === 'translate') {
-    prompt = 'Translate the following Arabic or Persian passage into English. Provide only the translation, then a brief note on any difficult terms:\n\n' + text;
-    label  = '🌐 Translation';
-  } else if (action === 'explain') {
-    prompt = 'Explain the following passage from an Ismaili text in plain English. Include its theological or philosophical significance:\n\n' + text;
-    label  = '💡 Explanation';
-  } else {
-    prompt = 'The user has selected the following passage from an Ismaili text and wants to discuss it:\n\n' + text + '\n\nPlease provide scholarly commentary and invite further questions.';
-    label  = '💬 Commentary';
-  }
-  runReaderAI(prompt, label);
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 }
-
-function translateSnippet(idx) {
-  const raw = readerSnippets[idx];
-  if (!raw) return;
-  // Strip OpenITI markup before sending to AI
-  const clean = raw
-    .replace(/#META#[^\n]*/g, '')
-    .replace(/^##+[^\n]*/gm, '')
-    .replace(/^#+\s*/gm, '')
-    .replace(/^~~/gm, '')
-    .replace(/PageV[\dM]+P\d+/g, '')
-    .replace(/\bms\d+\b/gi, '')
-    .replace(/\|/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  if (!clean) return;
-  const prompt = 'Translate the following Arabic or Persian passage into English. Provide only the translation, then a brief note on any difficult terms:\n\n' + clean;
-  runReaderAI(prompt, '\ud83c\udf10 Translation');
-  if (!readerOpen) toggleReader();
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 130) + 'px';
 }
-
-function runReaderAI(prompt, label) {
-  if (!WORKER_URL) { alert('Cloudflare Worker not configured.'); return; }
-
-  const panel = document.getElementById('reader-ai-response');
-  const body  = document.getElementById('reader-ai-body');
-  const lbl   = document.getElementById('reader-ai-label');
-
-  lbl.textContent = label;
-  panel.classList.add('open');
-  body.innerHTML  = '<div id="reader-ai-loading"><span></span><span></span><span></span>&nbsp;Thinking…</div>';
-
-  // Build a minimal context from the current book
-  let context = '';
-  if (readerBookIdx !== null && books[readerBookIdx]) {
-    const b = books[readerBookIdx];
-    context = 'Source text: ' + b.title + (b.author ? ' by ' + b.author : '') + '.';
-  }
-
-  const system = 'You are a scholarly assistant for the Alamut Library, a Digital Library of Ismaili Texts. '
-    + 'You help readers understand Arabic and Persian Ismaili texts. '
-    + 'Be concise, accurate and academically informed. '
-    + (context ? context : '');
-
-  const rProvider = activeProvider || 'anthropic';
-  const rInfo     = PROVIDER_INFO[rProvider] || PROVIDER_INFO['anthropic'];
-  fetch(WORKER_URL + '/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key':  apiKey,
-      'X-Provider': rProvider,
-      'X-Model':    rInfo.model,
-    },
-    body: JSON.stringify({
-      model:      rInfo.model,
-      max_tokens: 600,
-      system:     system,
-      messages:   [{ role: 'user', content: prompt }]
-    })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(data) {
-    const text = data.content ? data.content.map(function(b){return b.text||'';}).join('') : (data.error ? data.error.message : 'No response.');
-    body.innerHTML = formatReaderAIResponse(text);
-  })
-  .catch(function(err) {
-    body.innerHTML = '<p style="color:var(--error)">Error: ' + esc(err.message) + '</p>';
-  });
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
-
-function formatReaderAIResponse(text) {
-  return text
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-    .split('\n\n')
-    .map(function(p){ return '<p>'+p.replace(/\n/g,'<br>')+'</p>'; })
-    .join('');
+function slugify(s) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 }
-
-function closeReaderAI() {
-  document.getElementById('reader-ai-response').classList.remove('open');
+function detectLang(text) {
+  if (!text) return '';
+  const arabicCount = (text.match(/[\u0600-\u06FF]/g) || []).length;
+  const persianSpecific = (text.match(/[\u067E\u0686\u06AF\u06CC]/g) || []).length;
+  if (arabicCount < 10) return 'en';
+  return persianSpecific > arabicCount * 0.05 ? 'fa' : 'ar';
 }
-
-
-// ══ ABOUT DRAWER ══
-function openAbout() {
-  document.getElementById('about-overlay').classList.add('open');
-  document.getElementById('about-drawer').classList.add('open');
-}
-function closeAbout() {
-  document.getElementById('about-overlay').classList.remove('open');
-  document.getElementById('about-drawer').classList.remove('open');
-}
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeAbout();
-});
-
-// ══ VISITOR API KEY TOGGLE ══
-function toggleVisitorKey() {
-  const sel = document.getElementById('provider-select');
-  if (!sel) return; // guard against missing element
-  if (sel.value === 'anthropic') {
-    sel.value = 'anthropic-own';
-    onProviderChange();
-  } else {
-    const row = document.getElementById('api-visitor-row');
-    const btn = document.getElementById('visitor-key-toggle');
-    if (!row || !btn) return;
-    const open = row.classList.toggle('open');
-    btn.textContent = open ? '− Hide' : '+ Use your own key';
-    if (open) document.getElementById('api-key-input').focus();
-  }
-}
-
-// ══ FILE READER fix (FileReader needs correct usage) ══
-(function patchReadFile(){
-  window.readFile=function(file){
-    if(!file)return;
-    const fr=new FileReader();
-    fr.onload=ev=>{ uploadedText=ev.target.result; const n=document.getElementById('upload-name'); n.textContent='✓ '+file.name; n.style.display='block'; const ti=document.getElementById('upload-title-in'); if(!ti.value) ti.value=file.name.replace(/\.[^.]+$/,''); };
-    fr.readAsText(file);
-  };
-})();
 </script>
-
-<!-- ══ ABOUT DRAWER ══ -->
-<div id="about-overlay" onclick="closeAbout()"></div>
-<div id="about-drawer">
-  <div id="about-drawer-header">
-    <div>
-      <h2>Alamut Library</h2>
-      <p>Digital Ismaili Texts v.2.0</p>
-    </div>
-    <button id="about-close" onclick="closeAbout()" title="Close">✕</button>
-  </div>
-  <div id="about-body">
-    <h2>Introduction</h2>
-    <p>DigIT.2.0 is the second iteration of the bilingual corpus of Arabic and Persian texts, which will form the basis of a larger multilingual corpus of Ismaili texts. The corpus can be accessed and interacted with through the Alamut Library, a web application with search and AI chat functions.</p>
-    <p>The corpus is created and maintained by <strong>Aslisho Qurboniev</strong>, a researcher at the <strong>Institute of Ismaili Studies</strong>. The texts come from a variety of sources, such as from the OpenITI, but many will be digitised for the first time, including from manuscripts. The corpus follows the OpenITI standards and draws upon the tools created by the OpenITI and KITAB team.</p>
-    <p>The Corpus is still being developed, and new texts will be added as they become available. Your contribution will be welcome.</p>
-    <p><strong>Note:</strong> This repository is currently private. You are free to use the texts in any way you wish, but please do not redistribute them without permission.</p>
-
-    <h2>The Corpus</h2>
-    <p>The corpus contains texts in plain <a href="https://kitab-project.org/corpus/markdown" target="_blank">mARkdown</a> format, organised into folders by author. Further details can be found on the <a href="https://kitab-project.org/docs/openITI" target="_blank">KITAB website</a>.</p>
-
-    <h3>How to use the corpus</h3>
-    <p>The textual files are in plain text format. To work with them productively, download the files and open them in a text editor such as Kate Editor or EditPadPro.</p>
-    <p>Start with the documentation on the KITAB project website:
-      <a href="https://kitab-project.org/corpus/use" target="_blank">How to use the Corpus</a> ·
-      <a href="https://kitab-project.org/corpus/use#uri-structure" target="_blank">URI structure</a> ·
-      <a href="https://kitab-project.org/corpus/use#metadata-files" target="_blank">Metadata files</a>
-    </p>
-
-    <h3>Understanding the URIs</h3>
-    <p>Each text has a Unique Resource Identifier (URI) consisting of Author ID, Book ID, and version (edition) ID.</p>
-    <h5>Author ID – Book ID – Version ID – extension</h5>
-    <pre><code>0363QadiNucman.IkhtilafUsulMadhahib.EScr20110913-ara1.txt
-0346JacfarBinMansurYaman.TawilZakat.Kraken220315161331-ara1.txt
-0481NasirKhusraw.Safarnama.Ganjoor-per1.txt
-0721NizariQuhistani.Safarnama.Ganjoor-per1.txt</code></pre>
-    <p>For full details see the <a href="https://kitab-project.org/docs/openITI#uris--cts-like-folder-structure" target="_blank">OpenITI URI documentation</a>.</p>
-
-    <h3>Technical support and tools</h3>
-    <ul>
-      <li><a href="https://kitab-project.org/docs/openITI#getting-started-with-github" target="_blank">Installing and working with GitHub and GitBash</a></li>
-      <li><a href="https://kitab-project.org/docs/openITI#5-software-versions-and-installation" target="_blank">Recommended software for working with text files</a></li>
-      <li><a href="https://kitab-project.org/docs/openITI#5-software-versions-and-installation" target="_blank">Annotating texts</a></li>
-    </ul>
-
-    <h2>Corpus Preview</h2>
-    <img src="https://raw.githubusercontent.com/AlamutLibrary/DigIT.2.0/master/images/corpus.png" alt="Corpus overview">
-  </div>
-</div>
 </body>
 </html>
