@@ -1035,11 +1035,30 @@ function renderOpenITI(raw) {
       return;
     }
 
-    // ── 7. # followed by text — new paragraph ──
+    // ── 7. # followed by text — new paragraph, or poetry if it starts with %
+    // Poetry format in corpus: # % hemistich1 % % hemistich2 % % versenum
+    // Also handles %~% separator variant
     if (/^#\s+/.test(t)) {
-      flushPoetry(); flushPara();
       const rest = t.replace(/^#\s+/, '').trim();
-      if (rest) paraBuffer.push(clean(rest));
+      if (!rest) return;
+      if (rest.startsWith('%') || rest.includes('%~%')) {
+        // Poetry line embedded after # marker
+        flushPara();
+        var hs;
+        if (rest.includes('%~%')) {
+          hs = rest.split('%~%').map(function(s){ return clean(s.trim()); }).filter(Boolean);
+        } else {
+          var tokens = rest.split(/%+/).map(function(s){ return s.trim(); }).filter(Boolean);
+          var last = tokens[tokens.length - 1];
+          var isMeta = /^\d/.test(last) || last.indexOf('Vol') !== -1;
+          hs = (isMeta ? tokens.slice(0, -1) : tokens).map(function(s){ return clean(s); }).filter(Boolean);
+        }
+        if (hs[0]) poetryBuffer.push(hs[0]);
+        if (hs[1]) poetryBuffer.push(hs[1]);
+      } else {
+        flushPoetry(); flushPara();
+        paraBuffer.push(clean(rest));
+      }
       return;
     }
 
@@ -1050,25 +1069,29 @@ function renderOpenITI(raw) {
       return;
     }
 
-    // ── 9. Poetry lines — two formats used in this corpus:
-    // Format A: % hemistich1 % % hemistich2 % % versenum  (Ibn Hani, most texts)
-    // Format B: hemistich1 %~% hemistich2                  (other texts)
-    if ((t.includes('%') && t.trim().startsWith('%')) || t.includes('%~%')) {
+    // ── 9. Poetry lines — any line containing %~% or % % separator
+    // Also handles Ibn Hani format: % hem1 % % hem2 % % versenum
+    if (t.includes('%~%') || t.includes('% %') || t.trim().startsWith('%')) {
       flushPara();
       var h1 = '', h2 = '';
       if (t.includes('%~%')) {
-        // Format B: split directly on %~%
-        var bParts = t.split('%~%').map(function(s){ return clean(s.trim()); }).filter(Boolean);
-        h1 = bParts[0] || '';
-        h2 = bParts[1] || '';
+        // Most common: hemistich1 %~% hemistich2
+        var pts = t.split('%~%').map(function(s){ return clean(s.trim()); }).filter(Boolean);
+        h1 = pts[0] || '';
+        h2 = pts[1] || '';
+      } else if (t.includes('% %')) {
+        // Variant: hemistich1 % % hemistich2 (strip any surrounding % from each part)
+        var pts2 = t.split('% %').map(function(s){ return clean(s.replace(/^%+|%+$/g,'').trim()); }).filter(Boolean);
+        h1 = pts2[0] || '';
+        h2 = pts2[1] || '';
       } else {
-        // Format A: split on any run of % signs, discard trailing verse number
-        var tokens = t.split(/%+/).map(function(s){ return s.trim(); }).filter(Boolean);
-        var last = tokens[tokens.length - 1];
-        var isMeta = /^\d/.test(last) || last.indexOf('Vol') !== -1;
-        var hemistichs = isMeta ? tokens.slice(0, -1) : tokens;
-        h1 = hemistichs[0] ? clean(hemistichs[0]) : '';
-        h2 = hemistichs[1] ? clean(hemistichs[1]) : '';
+        // Ibn Hani format: % hem1 % % hem2 % % versenum
+        var toks = t.split(/%+/).map(function(s){ return s.trim(); }).filter(Boolean);
+        var tlast = toks[toks.length - 1];
+        var isMeta = /^\d/.test(tlast) || tlast.indexOf('Vol') !== -1;
+        var hs = isMeta ? toks.slice(0, -1) : toks;
+        h1 = hs[0] ? clean(hs[0]) : '';
+        h2 = hs[1] ? clean(hs[1]) : '';
       }
       if (h1) poetryBuffer.push(h1);
       if (h2) poetryBuffer.push(h2);
