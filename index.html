@@ -479,9 +479,10 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
       <option value="anthropic">🔶 Anthropic Claude (library key)</option>
       <option value="anthropic-own">🔶 Anthropic Claude (your key)</option>
       <option value="openai">🟢 OpenAI GPT-4o</option>
-      <option value="gemini">🔵 Google Gemini 1.5 Pro</option>
+      <option value="gemini">🔵 Google Gemini 2.0 Flash (free)</option>
+      <option value="groq">⚡ Groq — Llama 3.3-70B (free)</option>
       <option value="mistral">🟠 Mistral Large</option>
-      <option value="deepseek">⚫ DeepSeek Chat</option>
+      <option value="deepseek">⚫ DeepSeek V3</option>
     </select>
     <div id="api-visitor-row">
       <div id="api-visitor-note" class="provider-hint">Enter your API key below. <span id="provider-link"></span></div>
@@ -691,12 +692,13 @@ window.onload = () => {
 let activeProvider = 'anthropic';
 
 const PROVIDER_INFO = {
-  'anthropic':     { name: 'Anthropic Claude',  model: 'claude-sonnet-4-20250514', placeholder: 'sk-ant-…',  link: 'https://console.anthropic.com/settings/keys' },
-  'anthropic-own': { name: 'Anthropic Claude',  model: 'claude-sonnet-4-20250514', placeholder: 'sk-ant-…',  link: 'https://console.anthropic.com/settings/keys' },
-  'openai':        { name: 'OpenAI GPT-4o',      model: 'gpt-4o',                  placeholder: 'sk-proj-…', link: 'https://platform.openai.com/api-keys' },
-  'gemini':        { name: 'Google Gemini',       model: 'gemini-1.5-pro',          placeholder: 'AIza…',     link: 'https://aistudio.google.com/app/apikey' },
-  'mistral':       { name: 'Mistral Large',       model: 'mistral-large-latest',    placeholder: 'your key…', link: 'https://console.mistral.ai/api-keys' },
-  'deepseek':      { name: 'DeepSeek Chat',       model: 'deepseek-chat',           placeholder: 'sk-…',      link: 'https://platform.deepseek.com/api_keys' },
+  'anthropic':     { name: 'Anthropic Claude',   model: 'claude-sonnet-4-20250514', placeholder: 'sk-ant-…',  link: 'https://console.anthropic.com/settings/keys' },
+  'anthropic-own': { name: 'Anthropic Claude',   model: 'claude-sonnet-4-20250514', placeholder: 'sk-ant-…',  link: 'https://console.anthropic.com/settings/keys' },
+  'openai':        { name: 'OpenAI GPT-4o',       model: 'gpt-4o',                  placeholder: 'sk-proj-…', link: 'https://platform.openai.com/api-keys' },
+  'gemini':        { name: 'Google Gemini 2.0',   model: 'gemini-2.0-flash',        placeholder: 'AIza…',     link: 'https://aistudio.google.com/app/apikey' },
+  'mistral':       { name: 'Mistral Large',        model: 'mistral-large-latest',   placeholder: 'your key…', link: 'https://console.mistral.ai/api-keys' },
+  'deepseek':      { name: 'DeepSeek V3',          model: 'deepseek-chat',          placeholder: 'sk-…',      link: 'https://platform.deepseek.com/api_keys' },
+  'groq':          { name: 'Groq (Llama 3.3-70B)', model: 'llama-3.3-70b-versatile', placeholder: 'gsk_…',   link: 'https://console.groq.com/keys' },
 };
 
 function onProviderChange() {
@@ -729,10 +731,11 @@ function onProviderChange() {
 function autoDetectProvider(key) {
   if (!key || key.length < 8) return;
   let detected = null;
-  if (key.startsWith('sk-ant-'))                                      detected = 'anthropic-own';
-  else if (key.startsWith('AIza'))                                    detected = 'gemini';
-  else if (key.startsWith('sk-proj-') || (key.startsWith('sk-') && key.length > 40 && !key.startsWith('sk-ant'))) detected = 'openai';
-  else if (key.length >= 32)                                          detected = 'mistral';
+  if      (key.startsWith('sk-ant-'))   detected = 'anthropic-own';
+  else if (key.startsWith('AIza'))      detected = 'gemini';
+  else if (key.startsWith('gsk_'))      detected = 'groq';
+  else if (key.startsWith('sk-proj-'))  detected = 'openai';
+  else if (key.startsWith('sk-') && key.length > 40 && !key.startsWith('sk-ant')) detected = 'openai';
   if (detected && detected !== activeProvider) {
     document.getElementById('provider-select').value = detected;
     onProviderChange();

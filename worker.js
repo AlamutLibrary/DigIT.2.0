@@ -1,14 +1,11 @@
 /**
- * Alamut Library — Multi-Provider Cloudflare Worker
+ * Alamut Library — Multi-Provider Cloudflare Worker v2.1
  *
- * Routes to Anthropic, OpenAI, Gemini, Mistral, or DeepSeek
- * based on the X-Provider header from the frontend.
+ * Providers: Anthropic, OpenAI, Google Gemini, Mistral, DeepSeek, Groq
  *
  * DEPLOY:
  *   wrangler deploy
- *   wrangler secret put ANTHROPIC_API_KEY   ← library's default key (Anthropic only)
- *
- * Visitors using their own keys pass them via X-API-Key header.
+ *   wrangler secret put ANTHROPIC_API_KEY
  */
 
 const ALLOWED_ORIGINS = [
@@ -19,6 +16,14 @@ const ALLOWED_ORIGINS = [
   'http://localhost:8080',
   'null',
 ];
+
+// OpenAI-compatible provider endpoints
+const OPENAI_ENDPOINTS = {
+  'openai':    'https://api.openai.com/v1/chat/completions',
+  'mistral':   'https://api.mistral.ai/v1/chat/completions',
+  'deepseek':  'https://api.deepseek.com/chat/completions',  // note: no /v1/
+  'groq':      'https://api.groq.com/openai/v1/chat/completions',
+};
 
 export default {
   async fetch(request, env) {
@@ -39,7 +44,7 @@ export default {
 
     if (request.method === 'GET') {
       return new Response(
-        JSON.stringify({ status: 'Alamut Library Worker is running', version: '2.0-multi-provider' }),
+        JSON.stringify({ status: 'Alamut Library Worker is running', version: '2.1' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -48,15 +53,12 @@ export default {
       return new Response('Method not allowed', { status: 405, headers: corsHeaders });
     }
 
-    // ── Determine provider ───────────────────────────────────────────────────
+    // ── Provider + key ───────────────────────────────────────────────────────
     const provider = (request.headers.get('X-Provider') || 'anthropic').toLowerCase();
     const model    = request.headers.get('X-Model') || 'claude-sonnet-4-20250514';
 
-    // ── Resolve API key ──────────────────────────────────────────────────────
-    // Visitor key always takes priority (allows them to use their own account).
-    // Fall back to Cloudflare secret only for the library's Anthropic provider.
     let apiKey = (request.headers.get('X-API-Key') || '').trim();
-    if (!apiKey && (provider === 'anthropic')) {
+    if (!apiKey && provider === 'anthropic') {
       apiKey = (env.ANTHROPIC_API_KEY || '').trim();
     }
 
@@ -84,10 +86,10 @@ export default {
     try {
 
       // ════════════════════════════════════════════════════
-      // ANTHROPIC (claude-*)
+      // ANTHROPIC
       // ════════════════════════════════════════════════════
       if (provider === 'anthropic' || provider === 'anthropic-own') {
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: {
             'Content-Type':      'application/json',
@@ -96,39 +98,38 @@ export default {
           },
           body: JSON.stringify({ model, max_tokens: maxTokens, system, messages }),
         });
-        const data = await response.json();
+        const data = await res.json();
         return new Response(JSON.stringify(data), {
-          status: response.status,
+          status: res.status,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
       // ════════════════════════════════════════════════════
-      // OPENAI-COMPATIBLE (openai, mistral, deepseek)
+      // OPENAI-COMPATIBLE (openai, mistral, deepseek, groq)
       // ════════════════════════════════════════════════════
-      if (provider === 'openai' || provider === 'mistral' || provider === 'deepseek') {
-        const endpoints = {
-          'openai':   'https://api.openai.com/v1/chat/completions',
-          'mistral':  'https://api.mistral.ai/v1/chat/completions',
-          'deepseek': 'https://api.deepseek.com/v1/chat/completions',
-        };
-
-        // Convert Anthropic-style messages to OpenAI format
+      if (OPENAI_ENDPOINTS[provider]) {
+        // Convert Anthropic-style to OpenAI format
         const oaiMessages = [];
         if (system) oaiMessages.push({ role: 'system', content: system });
-        messages.forEach(function(m) { oaiMessages.push({ role: m.role, content: m.content }); });
+        messages.forEach(m => oaiMessages.push({ role: m.role, content: m.content }));
 
-        const response = await fetch(endpoints[provider], {
+        const res = await fetch(OPENAI_ENDPOINTS[provider], {
           method: 'POST',
           headers: {
             'Content-Type':  'application/json',
             'Authorization': 'Bearer ' + apiKey,
           },
-          body: JSON.stringify({ model, max_tokens: maxTokens, messages: oaiMessages }),
+          body: JSON.stringify({
+            model,
+            max_tokens: maxTokens,
+            messages: oaiMessages,
+          }),
         });
-        const data = await response.json();
 
-        // Normalise OpenAI response → Anthropic format so frontend works identically
+        const data = await res.json();
+
+        // Normalise to Anthropic format so frontend works identically
         if (data.choices && data.choices[0]) {
           return new Response(JSON.stringify({
             content: [{ type: 'text', text: data.choices[0].message.content || '' }],
@@ -136,9 +137,10 @@ export default {
             usage: data.usage,
           }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
-        // Pass through errors
+
+        // Pass through errors unchanged
         return new Response(JSON.stringify(data), {
-          status: response.status,
+          status: res.status,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
@@ -150,21 +152,19 @@ export default {
         const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/' +
           model + ':generateContent?key=' + apiKey;
 
-        // Convert to Gemini format
         const contents = [];
         if (system) {
-          // Gemini doesn't have a system role — prepend as user/model exchange
-          contents.push({ role: 'user',  parts: [{ text: '[System instruction]: ' + system }] });
-          contents.push({ role: 'model', parts: [{ text: 'Understood, I will follow these instructions.' }] });
+          contents.push({ role: 'user',  parts: [{ text: '[System]: ' + system }] });
+          contents.push({ role: 'model', parts: [{ text: 'Understood.' }] });
         }
-        messages.forEach(function(m) {
+        messages.forEach(m => {
           contents.push({
             role:  m.role === 'assistant' ? 'model' : 'user',
             parts: [{ text: m.content }],
           });
         });
 
-        const response = await fetch(geminiUrl, {
+        const res = await fetch(geminiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -172,23 +172,27 @@ export default {
             generationConfig: { maxOutputTokens: maxTokens },
           }),
         });
-        const data = await response.json();
 
-        // Normalise Gemini response → Anthropic format
+        const data = await res.json();
+
         if (data.candidates && data.candidates[0]) {
           const text = data.candidates[0].content.parts
-            .map(function(p){ return p.text || ''; }).join('');
+            .map(p => p.text || '').join('');
           return new Response(JSON.stringify({
             content: [{ type: 'text', text }],
           }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
-        return new Response(JSON.stringify(data), {
-          status: response.status,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+
+        // Surface Gemini errors clearly
+        return new Response(JSON.stringify({
+          error: {
+            message: data.error
+              ? data.error.message
+              : 'Gemini error: ' + JSON.stringify(data)
+          }
+        }), { status: res.status || 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      // Unknown provider
       return new Response(
         JSON.stringify({ error: { message: 'Unknown provider: ' + provider } }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -196,7 +200,7 @@ export default {
 
     } catch(err) {
       return new Response(
-        JSON.stringify({ error: { message: 'Worker proxy error: ' + err.message } }),
+        JSON.stringify({ error: { message: 'Worker error: ' + err.message } }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
