@@ -234,9 +234,13 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
   .oiti-para  { margin-bottom:1em; }
   .oiti-poetry { margin:12px 0; padding:10px 16px; background:var(--cream);
                  border-right:3px solid var(--gold); border-radius:4px; }
-  .oiti-bayt  { display:grid; grid-template-columns:1fr 1fr; gap:0 24px;
-                margin:4px 0; padding:3px 0; border-bottom:1px dotted var(--border); }
-  .oiti-bayt .s1, .oiti-bayt .s2 { text-align:right; }
+  .oiti-bayt  { display:flex; align-items:baseline; justify-content:center;
+                gap:0; margin:2px 0; padding:4px 0;
+                border-bottom:1px dotted var(--border); direction:rtl; }
+  .oiti-bayt .s1 { flex:1; text-align:right; }
+  .oiti-bayt .s2 { flex:1; text-align:right; }
+  .oiti-bayt .bayt-sep { flex-shrink:0; padding:0 14px; color:var(--gold);
+                         font-size:18px; line-height:1; user-select:none; }
   .oiti-ms    { font-size:10px; color:#b0a090; font-family:'IBM Plex Mono',monospace;
                 display:block; margin:14px 0 4px; letter-spacing:.04em; }
   #reader-content.rtl .oiti-head1,
@@ -937,9 +941,17 @@ function renderOpenITI(raw) {
       const s1 = poetryBuffer[i]   || '';
       const s2 = poetryBuffer[i+1] || '';
       if (s2) {
-        html += '<div class="oiti-bayt"><span class="s1">'+s1+'</span><span class="s2">'+s2+'</span></div>';
+        // Two hemistichs with traditional ❧ separator in the centre
+        html += '<div class="oiti-bayt">'
+              + '<span class="s2">'+s2+'</span>'
+              + '<span class="bayt-sep">❧</span>'
+              + '<span class="s1">'+s1+'</span>'
+              + '</div>';
       } else {
-        html += '<div class="oiti-bayt"><span class="s1" style="grid-column:1/-1;text-align:center;">'+s1+'</span></div>';
+        // Single hemistich — centred
+        html += '<div class="oiti-bayt" style="justify-content:center;">'
+              + '<span class="s1" style="flex:none;text-align:center;">'+s1+'</span>'
+              + '</div>';
       }
     }
     html += '</div>';
@@ -1035,11 +1047,15 @@ function renderOpenITI(raw) {
       return;
     }
 
-    // ── 9. Poetry: hemistich %% hemistich ──
-    if (t.includes('%%')) {
+    // ── 9. Poetry: hemistich %~% hemistich  (also handles % % variant)
+    // Each line is one bayt with two hemistichs separated by %~% or % %
+    if (t.includes('%~%') || /% %/.test(t)) {
       flushPara();
-      t.split('%%').map(function(s){ return clean(s.trim()); }).filter(Boolean)
-       .forEach(function(p){ poetryBuffer.push(p); });
+      // Split on %~% first, then fall back to % % (with spaces)
+      const sep = t.includes('%~%') ? '%~%' : '% %';
+      const parts = t.split(sep).map(function(s){ return clean(s.trim()); }).filter(Boolean);
+      // Each part is one hemistich — push both so flushPoetry pairs them
+      parts.forEach(function(p){ poetryBuffer.push(p); });
       return;
     }
 
