@@ -54,3 +54,9 @@ For details, see [here](https://kitab-project.org/docs/openITI#uris--cts-like-fo
 
 ![corpus](images/corpus.png)
 
+### Things to do
+* improve the search - the current RAG method is not great
+* improve the About section
+* improve the reader (tag Quran and hadith), other visuals
+
+
