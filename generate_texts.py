@@ -1,18 +1,7 @@
 
 import os, re
 
-TEXT_EXTENSIONS = {'.txt', '.ara1', '.ara2', '.per1', '.per2', '.markdown', '.completed'}
-
-def detect_lang(fname, ext):
-    if ext in ('.per1', '.per2'):
-        return 'fa'
-    if ext in ('.ara1', '.ara2'):
-        return 'ar'
-    if '-per' in fname.lower():
-        return 'fa'
-    if '-ara' in fname.lower():
-        return 'ar'
-    return 'ar'  # default for Ismaili corpus
+TEXT_EXTENSIONS = {'.txt', '.ara1', '.ara2', '.per1', '.per2', '.mArkdown', '.completed', '.md', 'markdown', '.inProgress'}
 
 texts = []
 
