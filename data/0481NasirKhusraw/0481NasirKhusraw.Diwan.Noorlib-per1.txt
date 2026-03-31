@@ -24387,7 +24387,7 @@ PageV00P433
 
 # چشم تو خورشيد و قمر، گنج تو پُر دُرّ و گهر %~% جود تو هنگام سحر، هم بر خضر هم بر شجر
 
-# بارد به مينا بر دُرَر، و آرد پديد از نم نما
+# بارد به مينا بر دُرَر، و آرد پديد از نم نما %~% (missing line)
 
 PageV00P434
 
@@ -27184,4 +27184,6 @@ PageV00P509
 PageV00P510
 ### |EDITOR|
 ### ||| [فهرست مطالع قصايد] 
-[the editorial section (pp. 511-514), containing the fehrist of the poem was removed]
+notes:
+1.[the editorial section (pp. 511-514), containing the fehrist of the poem was removed]
+2. [a missing line was replaced with a line "missing line" - needs to be corrected]
