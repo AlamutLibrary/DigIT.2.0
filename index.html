@@ -671,6 +671,39 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
 // ══ CONFIG ══
 const WORKER_URL = 'https://alamut.alamut.workers.dev'; // Set to your Cloudflare Worker URL in production
 
+  // ══ NEW: VECTOR SEARCH CONFIG ══
+const VECTOR_SEARCH_ENABLED = true;  // Feature flag
+const VECTOR_ENDPOINT = WORKER_URL + '/v1/search';  // Add to your Worker
+
+// ══ NEW: Vector Search Function ══
+async function vectorSearch(query, topK = 10) {
+  if (!VECTOR_SEARCH_ENABLED) return [];
+  
+  try {
+    const res = await fetch(VECTOR_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        query: query,
+        top_k: topK,
+        // Optional: filter by language or book
+        // filter: { language: 'ar' }
+      })
+    });
+    
+    if (!res.ok) {
+      console.warn('Vector search failed, falling back to keyword');
+      return [];
+    }
+    
+    const data = await res.json();
+    return data.results || [];
+    
+  } catch (e) {
+    console.warn('Vector search error:', e);
+    return [];
+  }
+}
 // ══ STATE ══
 let books        = [];
 let activeScope  = 'all';
@@ -946,9 +979,9 @@ function renderOpenITI(raw) {
       if (s2) {
         // Two hemistichs with traditional ❧ separator in the centre
         html += '<div class="oiti-bayt">'
-              + '<span class="s1">'+s1+'</span>'
-              + '<span class="bayt-sep">❧</span>'
               + '<span class="s2">'+s2+'</span>'
+              + '<span class="bayt-sep">❧</span>'
+              + '<span class="s1">'+s1+'</span>'
               + '</div>';
       } else {
         // Single hemistich — centred
@@ -1269,7 +1302,7 @@ async function sendMessage() {
   appendMsg({role:'user',content:text});
   showTyping(true); isLoading=true;
   try {
-    const reply = await callClaudeWithRetry(text, buildContext(text));
+    const reply = await callClaudeWithRetry(text, await buildContext(text));
     appendMsg({role:'assistant',content:reply});
   } catch(e) {
     const msg = e.message.toLowerCase().includes('overload')
@@ -1304,8 +1337,42 @@ async function callClaudeWithRetry(userText, context, attempt=1) {
 }
 function useChip(el) { if(!books.length)return; document.getElementById('chat-input').value=el.textContent; sendMessage(); }
 
-function buildContext(query) {
+async function buildContext(query) {
+  // Try vector search first
+  const vectorResults = await vectorSearch(query, 12);
+  
+  if (vectorResults.length > 0) {
+    // Format vector results as context
+    let ctx = '';
+    const byBook = {};
+    
+    vectorResults.forEach(r => {
+      const key = r.book_uri || r.source_file;
+      if (!byBook[key]) {
+        byBook[key] = {
+          title: r.book_title || r.book_uri,
+          author: r.author_name,
+          passages: []
+        };
+      }
+      byBook[key].passages.push({
+        text: r.text,
+        score: r.score,
+        page: r.page_ref
+      });
+    });
+    
+    Object.values(byBook).forEach(book => {
+      ctx += `=== ${book.title}${book.author ? ' | ' + book.author : ''} ===\n`;
+      book.passages.forEach((p, i) => {
+        ctx += `[Passage ${i+1}${p.page ? ' — ' + p.page : ''}]\n${p.text}\n\n`;
+      });
+    });
+    
+    return ctx.slice(0, 120000);
+  }
   // Single text + Full mode: send as much of the text as possible
+   // ═══ FALLBACK: Your existing keyword-based code below ═══
   if (activeScope !== 'all') {
     const b = books[activeScope];
     if (chatMode === 'full') {
@@ -1731,7 +1798,7 @@ function toggleVisitorKey() {
   <div id="about-body">
     <h2>Introduction</h2>
     <p>DigIT.2.0 is the second iteration of the bilingual corpus of Arabic and Persian texts, which will form the basis of a larger multilingual corpus of Ismaili texts. The corpus can be accessed and interacted with through the Alamut Library, a web application with search and AI chat functions.</p>
-    <p>The corpus is created and maintained by <strong>Aslisho Qurboniev</strong>, a researcher at the <strong>Institute of Ismaili Studies</strong>. The texts come from a variety of sources, such as from the OpenITI, but many will be digitised for the first time, including from manuscripts. The corpus follows the OpenITI standards and draws upon the tools created by the OpenITI and KITAB team.</p>
+    <p>The corpus is created and maintained by <strong>Aslisho Qurboniev</strong>, a researcher at the <strong>Institute of Ismaili Studies</strong>. The texts come from a variety of sources, such as the OpenITI corpus, but many will be digitised for the first time, including from manuscripts. The corpus follows the OpenITI standards and draws upon the tools created by the OpenITI and KITAB team.</p>
     <p>The Corpus is still being developed, and new texts will be added as they become available. Your contribution will be welcome.</p>
     <p><strong>Note:</strong> This repository is currently private. You are free to use the texts in any way you wish, but please do not redistribute them without permission.</p>
 
