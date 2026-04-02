@@ -466,6 +466,20 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
   .provider-hint { font-size: 9px; font-family: 'IBM Plex Mono', monospace; color: #4a3e40; margin-top: 3px; line-height: 1.4; }
   .provider-hint a { color: var(--gold-dim); text-decoration: none; }
   .provider-hint a:hover { text-decoration: underline; }
+
+  /* ══ Clickable citations in chat responses ══ */
+  .cite-title {
+    color: var(--gold-dim); font-weight: 600; cursor: pointer;
+    border-bottom: 1px dashed var(--gold-dim); transition: color .15s;
+  }
+  .cite-title:hover { color: var(--gold); }
+  .cite-page {
+    display: inline-block; font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; background: var(--gold-dim); color: #fff;
+    border-radius: 3px; padding: 0 4px; margin: 0 2px;
+    cursor: pointer; transition: background .15s; vertical-align: middle;
+  }
+  .cite-page:hover { background: var(--gold); }
 </style>
 </head>
 <body>
@@ -874,9 +888,11 @@ function addLocalText() {
 
 // ══ SCOPE / SIDEBAR ══
 function selectScope(scope) {
-  activeScope=scope; messages=[]; renderMessages(); showEmptyState(true);
+  activeScope=scope;
+  // Chat is a persistent workspace — do NOT clear messages when switching texts
   refreshUI(); renderMetaPanel();
   if (typeof scope==='number') { openInReader(scope); if(!readerOpen) toggleReader(); }
+  showEmptyState(messages.length === 0);
 }
 
 function refreshUI() { renderBooks(); updateChatHeader(); updateNotices(); }
@@ -1287,9 +1303,66 @@ function setMode(m) { chatMode=m; document.getElementById('mode-relevant').class
 function renderMessages() { const wrap=document.getElementById('messages-wrap'); wrap.querySelectorAll('.msg').forEach(el=>el.remove()); messages.forEach(m=>wrap.insertBefore(buildMsgEl(m),document.getElementById('typing'))); wrap.scrollTop=wrap.scrollHeight; }
 function buildMsgEl(m) { const div=document.createElement('div'); div.className=`msg ${m.role}`; const label=document.createElement('div'); label.className='msg-label'; label.textContent=m.role==='user'?'You':'Alamut Library'; const bubble=document.createElement('div'); bubble.className='msg-bubble'; bubble.innerHTML=m.role==='assistant'?formatResponse(m.content):esc(m.content); div.appendChild(label); div.appendChild(bubble); return div; }
 function formatResponse(text) {
-  let html=text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
-  html=html.split('\n').map(line=>{ const n=(line.match(/[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/g)||[]).length; return (n>5&&n>line.length*0.3)?`<div class="rtl-passage">${line}</div>`:line; }).join('\n');
-  return html.split('\n\n').map(p=>p.startsWith('<div')?p:`<p>${p.replace(/\n/g,'<br>')}</p>`).join('');
+  let html = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+
+  // Linkify book titles that match loaded texts — clickable to open in reader
+  books.forEach(function(b, idx) {
+    if (!b.title || b.title.length < 4) return;
+    const escaped = b.title.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    const re = new RegExp('(' + escaped + ')', 'g');
+    html = html.replace(re,
+      '<span class="cite-title" onclick="openInReader(' + idx + ')" title="Open \''+b.title+'\' in reader">$1</span>');
+  });
+
+  // Linkify page references e.g. "Vol.1 p.15" or "p. 3"
+  html = html.replace(/\bVol\.?\s*(\d+)\s+p\.?\s*(\d+)/gi, function(m, v, p) {
+    return '<span class="cite-page" onclick="openReaderToPage(' + parseInt(v) + ',' + parseInt(p) + ')" title="Go to page">' + m + '</span>';
+  });
+  html = html.replace(/(?<!Vol[^<]{0,20})\bp\.?\s*(\d+)\b/g, function(m, p) {
+    return '<span class="cite-page" onclick="openReaderToPage(null,' + parseInt(p) + ')" title="Go to page">' + m + '</span>';
+  });
+
+  // RTL passages
+  html = html.split('\n').map(function(line) {
+    const n = (line.match(/[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/g)||[]).length;
+    return (n > 5 && n > line.length * 0.3) ? '<div class="rtl-passage">' + line + '</div>' : line;
+  }).join('\n');
+
+  return html.split('\n\n').map(function(p) {
+    return p.startsWith('<div') ? p : '<p>' + p.replace(/\n/g,'<br>') + '</p>';
+  }).join('');
+}
+
+// Navigate reader to a specific page by searching for the page badge
+function openReaderToPage(vol, page) {
+  // Make sure reader is open
+  if (!readerOpen) toggleReader();
+  // If no book is open yet, try to find one containing this page
+  if (readerBookIdx === null) {
+    const padded = String(page).padStart(3,'0');
+    for (let i = 0; i < books.length; i++) {
+      if (books[i].content && books[i].content.indexOf('P' + padded) !== -1) {
+        openInReader(i); break;
+      }
+    }
+  }
+  // Search for the page marker in the reader
+  setTimeout(function() {
+    const label = vol
+      ? 'Vol.' + vol + ' p.' + page
+      : 'p.' + page;
+    const si = document.getElementById('search-input');
+    if (si) {
+      si.value = label;
+      syncToggle('lbl-regex','opt-regex');
+      document.getElementById('opt-regex').checked = false;
+      syncToggle('lbl-all','opt-all');
+      document.getElementById('opt-all').checked = false;
+      runSearch();
+    }
+  }, 200);
 }
 function showEmptyState(show) { const el=document.getElementById('empty-state'); if(el) el.style.display=(show&&!messages.length)?'':'none'; }
 function appendMsg(m) { messages.push(m); const wrap=document.getElementById('messages-wrap'); showEmptyState(false); wrap.insertBefore(buildMsgEl(m),document.getElementById('typing')); wrap.scrollTop=wrap.scrollHeight; }
