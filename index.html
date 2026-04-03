@@ -481,6 +481,9 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
   }
   .cite-page:hover { background: var(--gold); }
 
+  /* ══ RAG toggle ══ */
+  #rag-toggle { display: flex; gap: 2px; background: var(--cream); border: 1px solid var(--border); border-radius: 6px; padding: 2px; }
+
   /* ══ Passage count slider ══ */
   #passage-control {
     display: none; align-items: center; gap: 6px; padding: 2px 0;
@@ -626,6 +629,10 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
     <div id="mode-toggle">
       <button class="mode-btn active" id="mode-relevant" onclick="setMode('relevant')" title="Sends the most relevant passages">Passages</button>
       <button class="mode-btn" id="mode-full" onclick="setMode('full')" title="Sends full text — most thorough">Full</button>
+    </div>
+    <div id="rag-toggle" title="Switch between semantic (RAG) and keyword search">
+      <button class="mode-btn active" id="rag-on"  onclick="setRAG(true)"  title="Semantic search (RAG)">RAG</button>
+      <button class="mode-btn"        id="rag-off" onclick="setRAG(false)" title="Keyword search">Keys</button>
     </div>
     <div id="passage-control" class="visible">
       <input type="range" id="passage-slider" min="5" max="40" value="18"
@@ -788,6 +795,7 @@ let isLoading    = false;
 let chatMode     = 'relevant';
 let passageCount = 18;
 let lastContext  = null;
+let useRAG       = true;   // true = vector search, false = keyword scoring
 let apiKey       = '';
 let uploadedText = '';
 let readerOpen   = false;
@@ -1367,12 +1375,24 @@ function setMode(m) {
   document.getElementById('mode-full').classList.toggle('active', m==='full');
   const pc = document.getElementById('passage-control');
   if (pc) pc.classList.toggle('visible', m==='relevant');
+  // Dim RAG toggle in Full mode (it has no effect there)
+  const rt = document.getElementById('rag-toggle');
+  if (rt) rt.style.opacity = (m === 'full') ? '0.35' : '1';
 }
 
 function onPassageSlider(val) {
   passageCount = parseInt(val);
   const lbl = document.getElementById('passage-count-lbl');
   if (lbl) lbl.textContent = val;
+}
+
+function setRAG(on) {
+  useRAG = on;
+  document.getElementById('rag-on').classList.toggle('active', on);
+  document.getElementById('rag-off').classList.toggle('active', !on);
+  // Hide RAG toggle entirely in Full mode (irrelevant)
+  const rt = document.getElementById('rag-toggle');
+  if (rt) rt.style.opacity = (chatMode === 'full') ? '0.35' : '1';
 }
 
 // ══ MESSAGES ══
@@ -1551,48 +1571,42 @@ async function callClaudeWithRetry(userText, context, attempt=1) {
 function useChip(el) { if(!books.length)return; document.getElementById('chat-input').value=el.textContent; sendMessage(); }
 
 async function buildContext(query) {
-  // Try vector search first
-  const vectorResults = await vectorSearch(query, 12);
-  
-  if (vectorResults.length > 0) {
-    // Format vector results as context
-    let ctx = '';
-    const byBook = {};
-    
-    vectorResults.forEach(r => {
-      const key = r.book_uri || r.source_file;
-      if (!byBook[key]) {
-        byBook[key] = {
-          title: r.book_title || r.book_uri,
-          author: r.author_name,
-          passages: []
-        };
-      }
-      byBook[key].passages.push({
-        text: r.text,
-        score: r.score,
-        page: r.page_ref
-      });
-    });
-    
-    Object.values(byBook).forEach(book => {
-      ctx += `=== ${book.title}${book.author ? ' | ' + book.author : ''} ===\n`;
-      book.passages.forEach((p, i) => {
-        ctx += `[Passage ${i+1}${p.page ? ' — ' + p.page : ''}]\n${p.text}\n\n`;
-      });
-    });
-    
-    return ctx.slice(0, 120000);
+
+  // ── Full mode: always bypass RAG and send complete text ──────────────────
+  if (chatMode === 'full' && activeScope !== 'all') {
+    const b = books[activeScope];
+    return '=== ' + b.title + (b.author ? ' | ' + b.author : '') + ' ===\n' + b.content.slice(0, 100000);
   }
-  // Single text + Full mode: send as much of the text as possible
-   // ═══ FALLBACK: Your existing keyword-based code below ═══
+
+  // ── Vector search (only in Passages mode, only if enabled and working) ───
+  if (chatMode !== 'full' && useRAG) {
+    const vectorResults = await vectorSearch(query, passageCount || 18);
+
+    if (vectorResults.length > 0) {
+      let ctx = '';
+      const byBook = {};
+      vectorResults.forEach(r => {
+        const key = r.book_uri || r.source_file;
+        if (!byBook[key]) {
+          byBook[key] = { title: r.book_title || r.book_uri, author: r.author_name, passages: [] };
+        }
+        byBook[key].passages.push({ text: r.text, score: r.score, page: r.page_ref });
+      });
+      Object.values(byBook).forEach(book => {
+        ctx += `=== ${book.title}${book.author ? ' | ' + book.author : ''} ===\n`;
+        book.passages.forEach((p, i) => {
+          ctx += `[Passage ${i+1}${p.page ? ' — ' + p.page : ''}]\n${p.text}\n\n`;
+        });
+      });
+      return ctx.slice(0, 120000);
+    }
+  }
+
+  // ── Keyword-based fallback ────────────────────────────────────────────────
   if (activeScope !== 'all') {
     const b = books[activeScope];
-    if (chatMode === 'full') {
-      return '=== ' + b.title + (b.author ? ' | ' + b.author : '') + ' ===\n' + b.content.slice(0, 100000);
-    }
     const kw = extractKeywords(query);
-    const passages = findRelevantPassages(b.content, kw, 6, 800);
+    const passages = findRelevantPassages(b.content, kw, passageCount || 18, 800);
     let ctx = '=== ' + b.title + (b.author ? ' | ' + b.author : '') + ' ===\n';
     passages.forEach(function(p, i){ ctx += '[Passage ' + (i+1) + ']\n' + p + '\n\n'; });
     return ctx;
