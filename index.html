@@ -480,6 +480,63 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
     cursor: pointer; transition: background .15s; vertical-align: middle;
   }
   .cite-page:hover { background: var(--gold); }
+
+  /* ══ Passage count slider ══ */
+  #passage-control {
+    display: none; align-items: center; gap: 6px; padding: 2px 0;
+  }
+  #passage-control.visible { display: flex; }
+  #passage-slider {
+    -webkit-appearance: none; appearance: none;
+    width: 70px; height: 3px; border-radius: 2px;
+    background: var(--border); outline: none; cursor: pointer;
+  }
+  #passage-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 12px; height: 12px;
+    border-radius: 50%; background: var(--gold-dim); cursor: pointer;
+  }
+  #passage-count-lbl {
+    font-size: 9px; font-family: 'IBM Plex Mono', monospace;
+    color: var(--muted); white-space: nowrap; min-width: 28px;
+  }
+
+  /* ══ Context inspector ══ */
+  .ctx-inspector {
+    margin-top: 6px; border: 1px solid var(--border);
+    border-radius: 6px; overflow: hidden;
+  }
+  .ctx-inspector-toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 5px 10px; background: var(--cream); cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+    user-select: none; transition: background .12s;
+  }
+  .ctx-inspector-toggle:hover { background: #e0d8c8; }
+  .ctx-arrow { display: inline-block; transition: transform .15s; margin-right: 4px; }
+  .ctx-inspector-toggle.open .ctx-arrow { transform: rotate(90deg); }
+  .ctx-inspector-body {
+    display: none; padding: 8px 10px; background: #faf8f3;
+    border-top: 1px solid var(--border); max-height: 260px; overflow-y: auto;
+  }
+  .ctx-inspector-body.open { display: block; }
+  .ctx-book-group { margin-bottom: 10px; }
+  .ctx-book-title {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    color: var(--gold-dim); font-weight: 600; text-transform: uppercase;
+    letter-spacing: .05em; margin-bottom: 4px;
+  }
+  .ctx-passage {
+    padding: 5px 8px; background: var(--cream); border-radius: 4px;
+    margin-bottom: 4px; color: var(--ink); line-height: 1.6; font-size: 12px;
+    direction: rtl; text-align: right; font-family: 'Amiri', serif;
+    border-left: 2px solid var(--border);
+  }
+  .ctx-passage-meta {
+    font-family: 'IBM Plex Mono', monospace; font-size: 8px;
+    color: var(--muted); direction: ltr; text-align: left; margin-bottom: 2px;
+  }
+  .ctx-empty { color: var(--muted); font-style: italic; font-size: 11px; padding: 4px; }
 </style>
 </head>
 <body>
@@ -567,8 +624,13 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
       <div id="chat-header-meta">No texts loaded</div>
     </div>
     <div id="mode-toggle">
-      <button class="mode-btn active" id="mode-relevant" onclick="setMode('relevant')" title="Fast — sends only the most relevant passages">Passages</button>
-      <button class="mode-btn" id="mode-full" onclick="setMode('full')" title="Thorough — sends full text">Full</button>
+      <button class="mode-btn active" id="mode-relevant" onclick="setMode('relevant')" title="Sends the most relevant passages">Passages</button>
+      <button class="mode-btn" id="mode-full" onclick="setMode('full')" title="Sends full text — most thorough">Full</button>
+    </div>
+    <div id="passage-control" class="visible">
+      <input type="range" id="passage-slider" min="5" max="40" value="18"
+             oninput="onPassageSlider(this.value)" title="Number of passages to retrieve">
+      <span id="passage-count-lbl">18</span>
     </div>
     <button id="open-reader-btn" onclick="toggleReader()" title="Toggle text reader">📖 Reader</button>
   </div>
@@ -724,6 +786,8 @@ let activeScope  = 'all';
 let messages     = [];
 let isLoading    = false;
 let chatMode     = 'relevant';
+let passageCount = 18;
+let lastContext  = null;
 let apiKey       = '';
 let uploadedText = '';
 let readerOpen   = false;
@@ -1297,11 +1361,86 @@ function searchKeyNav(e) { if(e.key==='Enter'){e.shiftKey?navHit(-1):navHit(+1);
 function syncToggle(lblId,inputId) { document.getElementById(lblId).classList.toggle('on',document.getElementById(inputId).checked); }
 
 // ══ CHAT MODE ══
-function setMode(m) { chatMode=m; document.getElementById('mode-relevant').classList.toggle('active',m==='relevant'); document.getElementById('mode-full').classList.toggle('active',m==='full'); }
+function setMode(m) {
+  chatMode = m;
+  document.getElementById('mode-relevant').classList.toggle('active', m==='relevant');
+  document.getElementById('mode-full').classList.toggle('active', m==='full');
+  const pc = document.getElementById('passage-control');
+  if (pc) pc.classList.toggle('visible', m==='relevant');
+}
+
+function onPassageSlider(val) {
+  passageCount = parseInt(val);
+  const lbl = document.getElementById('passage-count-lbl');
+  if (lbl) lbl.textContent = val;
+}
 
 // ══ MESSAGES ══
 function renderMessages() { const wrap=document.getElementById('messages-wrap'); wrap.querySelectorAll('.msg').forEach(el=>el.remove()); messages.forEach(m=>wrap.insertBefore(buildMsgEl(m),document.getElementById('typing'))); wrap.scrollTop=wrap.scrollHeight; }
-function buildMsgEl(m) { const div=document.createElement('div'); div.className=`msg ${m.role}`; const label=document.createElement('div'); label.className='msg-label'; label.textContent=m.role==='user'?'You':'Alamut Library'; const bubble=document.createElement('div'); bubble.className='msg-bubble'; bubble.innerHTML=m.role==='assistant'?formatResponse(m.content):esc(m.content); div.appendChild(label); div.appendChild(bubble); return div; }
+function buildMsgEl(m) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + m.role;
+  const label = document.createElement('div');
+  label.className = 'msg-label';
+  label.textContent = m.role === 'user' ? 'You' : 'Alamut Library';
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  bubble.innerHTML = m.role === 'assistant' ? formatResponse(m.content) : esc(m.content);
+  div.appendChild(label);
+  div.appendChild(bubble);
+  if (m.role === 'assistant' && m.context) {
+    div.appendChild(buildContextInspector(m.context));
+  }
+  return div;
+}
+
+function buildContextInspector(ctx) {
+  const wrap = document.createElement('div');
+  wrap.className = 'ctx-inspector';
+  const groups = [];
+  let cur = null, buf = [];
+  ctx.split('\n').forEach(function(line) {
+    const bm = line.match(/^=== (.+?) ===/);
+    const pm = line.match(/^\[Passage \d+/);
+    if (bm) {
+      if (cur && buf.length) { cur.passages.push(buf.join(' ').trim()); buf = []; }
+      if (cur) groups.push(cur);
+      cur = { title: bm[1], passages: [] };
+    } else if (pm) {
+      if (cur && buf.length) { cur.passages.push(buf.join(' ').trim()); buf = []; }
+    } else if (cur && line.trim()) {
+      buf.push(line.trim());
+    }
+  });
+  if (cur) { if (buf.length) cur.passages.push(buf.join(' ').trim()); groups.push(cur); }
+  const totalP = groups.reduce(function(n,g){ return n+g.passages.length; }, 0);
+  const toggle = document.createElement('div');
+  toggle.className = 'ctx-inspector-toggle';
+  toggle.innerHTML = '<span><span class="ctx-arrow">›</span> Sources: ' + totalP + ' passage' + (totalP!==1?'s':'') + ' from ' + groups.length + ' text' + (groups.length!==1?'s':'') + '</span><span style="font-size:9px;">click to expand</span>';
+  const body = document.createElement('div');
+  body.className = 'ctx-inspector-body';
+  if (!groups.length) {
+    body.innerHTML = '<div class="ctx-empty">No passages retrieved.</div>';
+  } else {
+    groups.forEach(function(g) {
+      const grp = document.createElement('div');
+      grp.className = 'ctx-book-group';
+      const t = document.createElement('div');
+      t.className = 'ctx-book-title'; t.textContent = g.title;
+      grp.appendChild(t);
+      g.passages.forEach(function(p, i) {
+        const pd = document.createElement('div');
+        pd.className = 'ctx-passage';
+        pd.innerHTML = '<div class="ctx-passage-meta">Passage ' + (i+1) + '</div>' + esc(p.slice(0,300)) + (p.length>300?'…':'');
+        grp.appendChild(pd);
+      });
+      body.appendChild(grp);
+    });
+  }
+  toggle.onclick = function() { toggle.classList.toggle('open'); body.classList.toggle('open'); };
+  wrap.appendChild(toggle); wrap.appendChild(body);
+  return wrap;
+}
 function formatResponse(text) {
   let html = text
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -1375,8 +1514,9 @@ async function sendMessage() {
   appendMsg({role:'user',content:text});
   showTyping(true); isLoading=true;
   try {
-    const reply = await callClaudeWithRetry(text, await buildContext(text));
-    appendMsg({role:'assistant',content:reply});
+    lastContext = await buildContext(text);
+    const reply = await callClaudeWithRetry(text, lastContext);
+    appendMsg({role:'assistant', content: reply, context: lastContext});
   } catch(e) {
     const msg = e.message.toLowerCase().includes('overload')
       ? 'The AI is currently busy due to high demand. Please try again in a moment.'
@@ -1534,8 +1674,8 @@ async function buildContext(query) {
 
   const bookCounts = {};
   const selected = [];
-  const MAX_PASSAGES = 18;
-  const MAX_PER_BOOK = 3;
+  const MAX_PASSAGES = passageCount || 18;
+  const MAX_PER_BOOK = Math.max(2, Math.floor(MAX_PASSAGES / 6));
 
   for (let i = 0; i < scored.length && selected.length < MAX_PASSAGES; i++) {
     const item = scored[i];
