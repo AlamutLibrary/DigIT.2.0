@@ -540,6 +540,35 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
     color: var(--muted); direction: ltr; text-align: left; margin-bottom: 2px;
   }
   .ctx-empty { color: var(--muted); font-style: italic; font-size: 11px; padding: 4px; }
+
+  /* ══ Consent Banner ══ */
+  #consent-banner {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
+    background: var(--ink); color: var(--paper);
+    padding: 12px 20px; display: flex; align-items: center;
+    gap: 14px; flex-wrap: wrap;
+    border-top: 2px solid var(--gold-dim);
+    font-size: 11px; font-family: 'IBM Plex Sans', sans-serif;
+    line-height: 1.5; box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+  }
+  #consent-banner.hidden { display: none; }
+  #consent-banner p { flex: 1; min-width: 240px; color: #b0a090; margin: 0; }
+  #consent-banner a { color: var(--gold-light); text-decoration: underline; cursor: pointer; }
+  #consent-banner a:hover { color: var(--gold); }
+  #consent-accept {
+    padding: 6px 16px; background: var(--gold-dim); border: none;
+    border-radius: 5px; font-size: 11px; font-family: 'IBM Plex Mono', monospace;
+    color: var(--gold-light); cursor: pointer; white-space: nowrap;
+    transition: background .15s; flex-shrink: 0;
+  }
+  #consent-accept:hover { background: var(--gold); color: #fff; }
+  #consent-decline {
+    padding: 6px 12px; background: none; border: 1px solid #3a3028;
+    border-radius: 5px; font-size: 11px; font-family: 'IBM Plex Mono', monospace;
+    color: #6a5e50; cursor: pointer; white-space: nowrap;
+    transition: all .15s; flex-shrink: 0;
+  }
+  #consent-decline:hover { border-color: #6a5e50; color: #b0a090; }
 </style>
 </head>
 <body>
@@ -808,6 +837,7 @@ let searchTimer   = null;
 
 // ══ INIT ══
 window.onload = () => {
+  initConsent();
   const saved = sessionStorage.getItem('al_api_key');
   if (saved) { apiKey = saved; document.getElementById('api-key-input').value = saved; setStatus('api-key-status','✓ Key loaded from session','ok'); }
   refreshUI();
@@ -1777,9 +1807,13 @@ async function callClaude(userText, context) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-API-Key':  apiKey,
-      'X-Provider': provider,
-      'X-Model':    info.model,
+      'X-API-Key':    apiKey,
+      'X-Provider':   provider,
+      'X-Model':      info.model,
+      'X-Consent':    hasConsent() ? 'yes' : 'no',
+      'X-Mode':       chatMode,
+      'X-RAG':        String(useRAG),
+      'X-Passages':   String(passageCount),
     },
     body: JSON.stringify({
       model:      info.model,
@@ -2001,6 +2035,28 @@ function toggleVisitorKey() {
   }
 }
 
+
+// ══ CONSENT ══
+function initConsent() {
+  const choice = localStorage.getItem('al_consent');
+  if (choice === null) {
+    // First visit — show banner after short delay
+    setTimeout(function() {
+      document.getElementById('consent-banner').classList.remove('hidden');
+    }, 1500);
+  }
+}
+
+function setConsent(accepted) {
+  localStorage.setItem('al_consent', accepted ? 'yes' : 'no');
+  localStorage.setItem('al_consent_date', new Date().toISOString());
+  document.getElementById('consent-banner').classList.add('hidden');
+}
+
+function hasConsent() {
+  return localStorage.getItem('al_consent') === 'yes';
+}
+
 // ══ FILE READER fix (FileReader needs correct usage) ══
 (function patchReadFile(){
   window.readFile=function(file){
@@ -2058,7 +2114,56 @@ function toggleVisitorKey() {
 
     <h2>Corpus Preview</h2>
     <img src="https://raw.githubusercontent.com/AlamutLibrary/DigIT.2.0/master/images/corpus.png" alt="Corpus overview">
+
+    <h2>Privacy Notice</h2>
+    <p style="font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;">Last updated: April 2026 &nbsp;·&nbsp; Data controller: Institute of Ismaili Studies, 210 Euston Road, London NW1 2DA</p>
+
+    <h3>1. Who we are</h3>
+    <p>The Alamut Library (DigIT.2.0) is a digital research tool developed and maintained by Aslisho Qurboniev at the <strong>Institute of Ismaili Studies (IIS)</strong>. It provides access to a corpus of Arabic and Persian Ismaili texts and AI-assisted reading and research functions.</p>
+
+    <h3>2. What data we collect</h3>
+    <p>When you use the Alamut Library, we collect the following:</p>
+    <ul>
+      <li><strong>Search and chat queries</strong> — to understand how the tool is used and improve retrieval quality (12 months)</li>
+      <li><strong>Country of access</strong> (derived from IP address) — to understand geographic reach (12 months)</li>
+      <li><strong>Timestamp</strong> — to analyse usage patterns (12 months)</li>
+      <li><strong>AI provider selected</strong> — to understand tool preferences (12 months)</li>
+      <li><strong>Search mode</strong> (RAG / keyword / full text) — to evaluate and improve retrieval methods (12 months)</li>
+      <li><strong>Approximate query length</strong> — to understand research patterns (12 months)</li>
+    </ul>
+    <p>We do <strong>not</strong> collect your name, email, full IP address, or API keys (keys are stored only in your browser session and never transmitted to our logging system).</p>
+
+    <h3>3. Lawful basis</h3>
+    <p>We process data under <strong>Article 6(1)(f) of the UK GDPR — Legitimate Interests</strong> for the improvement of a specialist academic research tool. The data is minimal and pseudonymous, the tool is non-commercial, and users are clearly informed via this notice.</p>
+
+    <h3>4. How we use your data</h3>
+    <p>Data is used exclusively to understand which texts and topics researchers are interested in, identify gaps in the corpus, improve AI-assisted search, and report aggregate usage statistics to IIS. We do not use data for commercial purposes, advertising, profiling, or automated decision-making.</p>
+
+    <h3>5. Who has access</h3>
+    <p>Access is restricted to the developer (Aslisho Qurboniev, IIS) and the IIS Data Protection Officer. Data is stored on <strong>Cloudflare's infrastructure</strong> (Workers KV), subject to Cloudflare's data processing agreement.</p>
+
+    <h3>6. Your rights</h3>
+    <p>Under UK GDPR you have the right to access, erasure, restriction, objection, and portability of your data, and to complain to the <a href="https://ico.org.uk" target="_blank">ICO</a> (0303 123 1113). Contact: <a href="mailto:aqurboniev@iis.ac.uk">aqurboniev@iis.ac.uk</a></p>
+
+    <h3>7. Cookies and local storage</h3>
+    <p>The Alamut Library uses <strong>browser session storage</strong> only to temporarily store your API key within your current session. This is not a cookie and is not transmitted to any server. It is cleared when you close your browser tab. We do not use tracking cookies or third-party analytics.</p>
+
+    <h3>8. Changes to this notice</h3>
+    <p>We may update this notice to reflect changes in our practices or legal requirements. Continued use of the Alamut Library after changes are posted constitutes acceptance of the updated notice.</p>
+
+    <h3>9. Contact</h3>
+    <p><a href="mailto:aqurboniev@iis.ac.uk">aqurboniev@iis.ac.uk</a></p>
   </div>
+</div>
+
+<!-- ══ CONSENT BANNER ══ -->
+<div id="consent-banner" class="hidden">
+  <p>The Alamut Library collects anonymised usage data (queries, country, mode) to improve the system.
+     No personal identifiers are stored. By continuing you agree to this.
+     <a onclick="openAbout()" style="cursor:pointer;">Read our Privacy Notice →</a>
+  </p>
+  <button id="consent-accept" onclick="setConsent(true)">Accept</button>
+  <button id="consent-decline" onclick="setConsent(false)">Decline</button>
 </div>
 </body>
 </html>

@@ -1,0 +1,200 @@
+{
+  "main": {
+    "id": "08779003acf1a40f",
+    "type": "split",
+    "children": [
+      {
+        "id": "029b021823a2e2f3",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "c22044caa2270d68",
+            "type": "leaf",
+            "state": {
+              "type": "image",
+              "state": {
+                "file": "images/logo.png"
+              },
+              "icon": "lucide-image",
+              "title": "logo"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "c4b00dfd1bf0287f",
+    "type": "split",
+    "children": [
+      {
+        "id": "296aa9410196e7d4",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "3601b2f5ab15a499",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "9c38fc0a400f781c",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "6c4a0aa982256aac",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "5937597f3b16a49a",
+    "type": "split",
+    "children": [
+      {
+        "id": "2e69d6dc1c243ed3",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "5ab6d85382d180cc",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "images/logo.png",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for logo"
+            }
+          },
+          {
+            "id": "1e6fcb9fe2b2cd82",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "images/logo.png",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from logo"
+            }
+          },
+          {
+            "id": "9530f62b4407b948",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "d58867ec8a160dfc",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "503c2cfca78ee4a6",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "images/logo.png",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of logo"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "3601b2f5ab15a499",
+  "lastOpenFiles": [
+    "DigIT_for_Obsidian/0854MuhammadBinSacdRafna/0854MuhammadBinSacdRafna.RisalatKafiyya/0854MuhammadBinSacdRafna.RisalatKafiyya.yml",
+    "DigIT_for_Obsidian/0854MuhammadBinSacdRafna/0854MuhammadBinSacdRafna.RisalatKafiyya/0854MuhammadBinSacdRafna.RisalatKafiyya.Noorlib0034819BK2-ara1.yml",
+    "DigIT_for_Obsidian/0854MuhammadBinSacdRafna/0854MuhammadBinSacdRafna.RisalatKafiyya/0854MuhammadBinSacdRafna.RisalatKafiyya.Noorlib0034819BK2-ara1.txt",
+    "DigIT_for_Obsidian/0883ShihabDinBinNasrDaci/0883ShihabDinBinNasrDaci.KitabIdah/0883ShihabDinBinNasrDaci.KitabIdah.yml",
+    "DigIT_for_Obsidian/0883ShihabDinBinNasrDaci/0883ShihabDinBinNasrDaci.KitabIdah/0883ShihabDinBinNasrDaci.KitabIdah.Noorlib0010584-ara1.yml",
+    "DigIT_for_Obsidian/0883ShihabDinBinNasrDaci/0883ShihabDinBinNasrDaci.KitabIdah/0883ShihabDinBinNasrDaci.KitabIdah.Noorlib0010584-ara1.txt",
+    "DigIT_for_Obsidian/0872IdrisCimadDin/0872IdrisCimadDin.ZahrMacani/0872IdrisCimadDin.ZahrMacani.yml",
+    "DigIT_for_Obsidian/0872IdrisCimadDin/0872IdrisCimadDin.ZahrMacani/0872IdrisCimadDin.ZahrMacani.Noorlib0023588-ara1.yml",
+    "DigIT_for_Obsidian/0872IdrisCimadDin/0872IdrisCimadDin.ZahrMacani/0872IdrisCimadDin.ZahrMacani.Noorlib0023588-ara1.txt",
+    "DigIT_for_Obsidian/0872IdrisCimadDin/0872IdrisCimadDin.CuyunAkhbar/0872IdrisCimadDin.CuyunAkhbar.yml",
+    "DigIT_for_Obsidian/0872IdrisCimadDin/0872IdrisCimadDin.CuyunAkhbar/0872IdrisCimadDin.CuyunAkhbar.Noorlib0019441-ara2.yml",
+    "README.md",
+    "images/corpus.png"
+  ]
+}
