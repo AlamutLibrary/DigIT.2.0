@@ -1,5 +1,12 @@
 {
   "name": "alamut",
   "main": "worker.js",
-  "compatibility_date": "2025-01-01"
+  "compatibility_date": "2025-01-01",
+"kv_namespaces": [
+         {
+           "binding": "ALAMUT_LOGS",
+           "id": "2ee1dcc203f84b95a62f8ff3aaabe454"
+         }
+       ]
 }
+
