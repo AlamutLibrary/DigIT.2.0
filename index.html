@@ -2116,42 +2116,91 @@ function hasConsent() {
     <img src="https://raw.githubusercontent.com/AlamutLibrary/DigIT.2.0/master/images/corpus.png" alt="Corpus overview">
 
     <h2>Privacy Notice</h2>
-    <p style="font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;">Last updated: April 2026 &nbsp;·&nbsp; Data controller: Institute of Ismaili Studies, 210 Euston Road, London NW1 2DA</p>
+    <p style="font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;">Last updated: April 2026 &nbsp;·&nbsp; Data controller: Aslisho Qurboniev &nbsp;·&nbsp; Contact: <a href="mailto:aqurboniev@iis.ac.uk">aqurboniev@iis.ac.uk</a></p>
 
     <h3>1. Who we are</h3>
-    <p>The Alamut Library (DigIT.2.0) is a digital research tool developed and maintained by Aslisho Qurboniev at the <strong>Institute of Ismaili Studies (IIS)</strong>. It provides access to a corpus of Arabic and Persian Ismaili texts and AI-assisted reading and research functions.</p>
+    <p>The Alamut Library (DigIT.2.0) is a digital research tool developed and maintained by Aslisho Qurboniev (IIS). It provides access to a corpus of Arabic and Persian Ismaili texts and AI-assisted reading and research functions.</p>
 
     <h3>2. What data we collect</h3>
     <p>When you use the Alamut Library, we collect the following:</p>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin:8px 0;">
+      <thead><tr style="border-bottom:1px solid var(--border);">
+        <th style="text-align:left;padding:4px 8px;">Data</th>
+        <th style="text-align:left;padding:4px 8px;">Purpose</th>
+        <th style="text-align:left;padding:4px 8px;">Retention</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:4px 8px;"><strong>Search and chat queries</strong></td><td style="padding:4px 8px;">To understand how the tool is used and improve retrieval quality</td><td style="padding:4px 8px;">12 months</td></tr>
+        <tr><td style="padding:4px 8px;"><strong>Country of access</strong> (derived from IP address)</td><td style="padding:4px 8px;">To understand the geographic reach of the library</td><td style="padding:4px 8px;">12 months</td></tr>
+        <tr><td style="padding:4px 8px;"><strong>Timestamp</strong></td><td style="padding:4px 8px;">To analyse usage patterns</td><td style="padding:4px 8px;">12 months</td></tr>
+        <tr><td style="padding:4px 8px;"><strong>AI provider selected</strong></td><td style="padding:4px 8px;">To understand tool preferences</td><td style="padding:4px 8px;">12 months</td></tr>
+        <tr><td style="padding:4px 8px;"><strong>Search mode</strong> (RAG / keyword / full text)</td><td style="padding:4px 8px;">To evaluate and improve retrieval methods</td><td style="padding:4px 8px;">12 months</td></tr>
+        <tr><td style="padding:4px 8px;"><strong>Approximate query length</strong></td><td style="padding:4px 8px;">To understand research patterns</td><td style="padding:4px 8px;">12 months</td></tr>
+      </tbody>
+    </table>
+    <p>We do <strong>not</strong> collect or store:</p>
     <ul>
-      <li><strong>Search and chat queries</strong> — to understand how the tool is used and improve retrieval quality (12 months)</li>
-      <li><strong>Country of access</strong> (derived from IP address) — to understand geographic reach (12 months)</li>
-      <li><strong>Timestamp</strong> — to analyse usage patterns (12 months)</li>
-      <li><strong>AI provider selected</strong> — to understand tool preferences (12 months)</li>
-      <li><strong>Search mode</strong> (RAG / keyword / full text) — to evaluate and improve retrieval methods (12 months)</li>
-      <li><strong>Approximate query length</strong> — to understand research patterns (12 months)</li>
+      <li>Your name or email address</li>
+      <li>Your full IP address (only country-level location is retained)</li>
+      <li>Any personal information you may include in a query</li>
+      <li>API keys you enter in the sidebar (these are stored only in your browser session and never transmitted to our logging system)</li>
     </ul>
-    <p>We do <strong>not</strong> collect your name, email, full IP address, or API keys (keys are stored only in your browser session and never transmitted to our logging system).</p>
 
-    <h3>3. Lawful basis</h3>
-    <p>We process data under <strong>Article 6(1)(f) of the UK GDPR — Legitimate Interests</strong> for the improvement of a specialist academic research tool. The data is minimal and pseudonymous, the tool is non-commercial, and users are clearly informed via this notice.</p>
+    <h3>3. Lawful basis for processing</h3>
+    <p>We process this data under <strong>Article 6(1)(f) of the UK GDPR — Legitimate Interests</strong>. Our legitimate interest is the improvement of a specialist academic research tool serving the scholarly study of Ismaili thought, history, and literature. We have assessed that this interest is not overridden by your rights and freedoms, given:</p>
+    <ul>
+      <li>The data collected is minimal and pseudonymous</li>
+      <li>Full IP addresses are not retained</li>
+      <li>The tool serves an academic, non-commercial purpose</li>
+      <li>Users are clearly informed of data collection via this notice</li>
+    </ul>
 
     <h3>4. How we use your data</h3>
-    <p>Data is used exclusively to understand which texts and topics researchers are interested in, identify gaps in the corpus, improve AI-assisted search, and report aggregate usage statistics to IIS. We do not use data for commercial purposes, advertising, profiling, or automated decision-making.</p>
+    <p>Data collected is used exclusively to:</p>
+    <ul>
+      <li>Understand which texts and topics researchers are most interested in</li>
+      <li>Identify gaps in the corpus or retrieval quality</li>
+      <li>Improve the AI-assisted search and chat functions</li>
+      <li>Report aggregate usage statistics to IIS for institutional reporting</li>
+    </ul>
+    <p>We do <strong>not</strong> use your data for:</p>
+    <ul>
+      <li>Commercial purposes</li>
+      <li>Advertising or profiling</li>
+      <li>Sale or transfer to third parties</li>
+      <li>Automated decision-making that affects you</li>
+    </ul>
 
-    <h3>5. Who has access</h3>
-    <p>Access is restricted to the developer (Aslisho Qurboniev, IIS) and the IIS Data Protection Officer. Data is stored on <strong>Cloudflare's infrastructure</strong> (Workers KV), subject to Cloudflare's data processing agreement.</p>
+    <h3>5. Who has access to your data</h3>
+    <p>Access to usage logs is restricted to:</p>
+    <ul>
+      <li>The developer (Aslisho Qurboniev, IIS)</li>
+      <li>The IIS Data Protection Officer, for compliance purposes</li>
+    </ul>
+    <p>Data is stored on <strong>Cloudflare's infrastructure</strong> (Workers KV or D1), which is subject to Cloudflare's data processing agreement. Cloudflare may store data in the US and EEA under standard contractual clauses.</p>
 
     <h3>6. Your rights</h3>
-    <p>Under UK GDPR you have the right to access, erasure, restriction, objection, and portability of your data, and to complain to the <a href="https://ico.org.uk" target="_blank">ICO</a> (0303 123 1113). Contact: <a href="mailto:aqurboniev@iis.ac.uk">aqurboniev@iis.ac.uk</a></p>
+    <p>Under UK GDPR you have the right to:</p>
+    <ul>
+      <li><strong>Access</strong> the data we hold about you</li>
+      <li><strong>Erasure</strong> — request deletion of your data</li>
+      <li><strong>Restriction</strong> — ask us to limit processing</li>
+      <li><strong>Object</strong> — object to processing based on legitimate interests</li>
+      <li><strong>Portability</strong> — receive your data in a machine-readable format</li>
+      <li><strong>Complain</strong> to the Information Commissioner's Office (ICO): <a href="https://ico.org.uk" target="_blank">ico.org.uk</a> / 0303 123 1113</li>
+    </ul>
+    <p>To exercise any of these rights, contact: <a href="mailto:aqurboniev@iis.ac.uk">aqurboniev@iis.ac.uk</a></p>
+    <p>Because we do not collect identifying information, we may not be able to locate records relating to a specific individual without additional information from you.</p>
 
     <h3>7. Cookies and local storage</h3>
-    <p>The Alamut Library uses <strong>browser session storage</strong> only to temporarily store your API key within your current session. This is not a cookie and is not transmitted to any server. It is cleared when you close your browser tab. We do not use tracking cookies or third-party analytics.</p>
+    <p>The Alamut Library uses <strong>browser session storage</strong> only to temporarily store your API key within your current browser session. This is not a cookie and is not transmitted to any server. It is cleared when you close your browser tab.</p>
+    <p>We do not use tracking cookies or third-party analytics (e.g. Google Analytics).</p>
 
     <h3>8. Changes to this notice</h3>
-    <p>We may update this notice to reflect changes in our practices or legal requirements. Continued use of the Alamut Library after changes are posted constitutes acceptance of the updated notice.</p>
+    <p>We may update this notice to reflect changes in our practices or legal requirements. The date at the top of this page indicates when it was last revised. Continued use of the Alamut Library after changes are posted constitutes acceptance of the updated notice.</p>
 
     <h3>9. Contact</h3>
+    <p>For any questions about this privacy notice or our data practices:</p>
     <p><a href="mailto:aqurboniev@iis.ac.uk">aqurboniev@iis.ac.uk</a></p>
   </div>
 </div>
