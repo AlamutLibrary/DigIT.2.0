@@ -1,7 +1,26 @@
-
 import os, re
 
-TEXT_EXTENSIONS = {'.txt', '.ara1', '.ara2', '.per1', '.per2', '.mArkdown', '.completed', '.md', 'markdown', '.inProgress'}
+TEXT_EXTENSIONS = {
+    '.txt', '.ara1', '.ara2', '.per1', '.per2',
+    '.markdown', '.mARkdown', '.md',
+    '.completed', '.inProgress'
+}
+
+
+def detect_lang(fname, ext):
+    """Determine language from the file extension or filename markers."""
+    e = ext.lower()
+    if e in ('.per1', '.per2'):
+        return 'fa'
+    if e in ('.ara1', '.ara2'):
+        return 'ar'
+    low = fname.lower()
+    if '-per' in low or '.per' in low:
+        return 'fa'
+    if '-ara' in low or '.ara' in low:
+        return 'ar'
+    return 'ar'   # default for the Ismaili corpus
+
 
 texts = []
 
@@ -18,24 +37,26 @@ for author_dir in sorted(os.listdir('data')):
         for fname in sorted(files):
             if fname.startswith('.'):
                 continue
+
             name, ext = os.path.splitext(fname)
-            # Handle double extensions like .completed
+            real_ext = ext  # the extension used for language detection
+
+            # Handle double extensions like file.ara1.completed
             if ext not in TEXT_EXTENSIONS:
-                # Try stripping one more extension e.g. file.ara1.completed
                 name2, ext2 = os.path.splitext(name)
                 if ext2 in TEXT_EXTENSIONS:
-                    name, ext = name2, ext2 + ext  # keep full name
+                    real_ext = ext2          # the meaningful extension (.ara1 etc.)
+                    name = name2             # strip the trailing status suffix
                 else:
                     continue
 
-            txt_path = os.path.join(root, fname).replace('\\', '/')
-            base = fname  # full filename including extension for ID
-            parts = name.split('.')
+            txt_path   = os.path.join(root, fname).replace('\\', '/')
+            parts      = name.split('.')
             author_id  = parts[0] if len(parts) > 0 else ''
             book_title = parts[1] if len(parts) > 1 else name
             edition    = parts[2] if len(parts) > 2 else ''
 
-            lang = detect_lang(fname, os.path.splitext(fname)[1])
+            lang = detect_lang(fname, real_ext)
 
             # Look for matching .yml metadata in a book subdirectory
             yml_path = None

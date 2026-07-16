@@ -279,13 +279,6 @@ texts:
     raw_text_path: "data/0363QadiNucman/0363QadiNucman.UrjuzaMukhtaraFiImama/0363QadiNucman.UrjuzaMukhtaraFiImama.Noorlib0028963-ara1.txt"
     github_path: "data/0363QadiNucman/0363QadiNucman.UrjuzaMukhtaraFiImama/0363QadiNucman.UrjuzaMukhtaraFiImama.Noorlib0028963-ara1.yml"
 
-  - id: 0365mansurjawdhari_siratustadhjawdhar_kraken230417165029_ara1_txt
-    title: "Sirat Ustadh Jawdhar"
-    author: "0365MansurJawdhari"
-    language: ar
-    branch: master
-    raw_text_path: "data/0365MansurJawdhari/0365MansurJawdhari.SiratUstadhJawdhar.Kraken230417165029-ara1.txt"
-
   - id: 0375ikhwansafa_jamicatjamica_gvdb20200108_ara1_txt
     title: "Jamicat Jamica"
     author: "0375IkhwanSafa"
@@ -328,6 +321,34 @@ texts:
     branch: master
     raw_text_path: "data/0375IkhwanSafa/0375IkhwanSafa.JamicatJamicaBohra/0375IkhwanSafa.JamicatJamicaBohra.GVDB20230116-ara1.txt"
     github_path: "data/0375IkhwanSafa/0375IkhwanSafa.JamicatJamicaBohra/0375IkhwanSafa.JamicatJamicaBohra.GVDB20230116-ara1.yml"
+
+  - id: 0375mansurjawdhari_siratustadhjawdhar_fastocr_ara2_txt
+    title: "Sirat Ustadh Jawdhar"
+    author: "0375MansurJawdhari"
+    language: ar
+    branch: master
+    raw_text_path: "data/0375MansurJawdhari/0375MansurJawdhari.SiratUstadhJawdhar.FASTOCR-ara2.txt"
+
+  - id: 0375mansurjawdhari_siratustadhjawdhar_kraken230417165029_ara1_txt
+    title: "Sirat Ustadh Jawdhar"
+    author: "0375MansurJawdhari"
+    language: ar
+    branch: master
+    raw_text_path: "data/0375MansurJawdhari/0375MansurJawdhari.SiratUstadhJawdhar.Kraken230417165029-ara1.txt"
+
+  - id: 0375mansurjawdhari_siratustadhjawdhar_paginated_txt
+    title: "0375 Mansur Jawdhari_ Sirat Ustadh Jawdhar_paginated"
+    author: "0375MansurJawdhari_SiratUstadhJawdhar_paginated"
+    language: ar
+    branch: master
+    raw_text_path: "data/0375MansurJawdhari/0375MansurJawdhari_SiratUstadhJawdhar_paginated.txt"
+
+  - id: 0375mansurjawdhari_siratustadhjawdhar_paginated_tagged_txt
+    title: "0375 Mansur Jawdhari_ Sirat Ustadh Jawdhar_paginated_tagged"
+    author: "0375MansurJawdhari_SiratUstadhJawdhar_paginated_tagged"
+    language: ar
+    branch: master
+    raw_text_path: "data/0375MansurJawdhari/0375MansurJawdhari_SiratUstadhJawdhar_paginated_tagged.txt"
 
   - id: 0386ahmadibnibrahimnaysaburi_ithbatimama_noorlib0024484_ara1_txt
     title: "Ithbat Imama"
@@ -468,6 +489,13 @@ texts:
     branch: master
     raw_text_path: "data/0481NasirKhusraw/0481NasirKhusraw.WajhiDin/0481NasirKhusraw.WajhiDin.Noorlib0035525-per1.txt"
     github_path: "data/0481NasirKhusraw/0481NasirKhusraw.WajhiDin/0481NasirKhusraw.WajhiDin.Noorlib0035525-per1.yml"
+
+  - id: 0517hasansabbah_namabaculamaqazwin_mss_iis_per1_txt
+    title: "Nama Ba Culama Qazwin"
+    author: "0517HasanSabbah"
+    language: fa
+    branch: master
+    raw_text_path: "data/0517HasanSabbah/0517HasanSabbah.NamaBaCulamaQazwin.MSS-IIS-per1.txt"
 
   - id: 0523anonymous_hidayatamiriyya_kraken220323022415_ara1_txt
     title: "Hidayat Amiriyya"
@@ -686,3 +714,17 @@ texts:
     branch: master
     raw_text_path: "data/0883ShihabDinBinNasrDaci/0883ShihabDinBinNasrDaci.KitabIdah/0883ShihabDinBinNasrDaci.KitabIdah.Noorlib0010584-ara1.txt"
     github_path: "data/0883ShihabDinBinNasrDaci/0883ShihabDinBinNasrDaci.KitabIdah/0883ShihabDinBinNasrDaci.KitabIdah.Noorlib0010584-ara1.yml"
+
+  - id: anonymous_dawrkashfdawrsatr_mss_iis_per1_txt
+    title: "Dawr Kashf Dawr Satr"
+    author: "Anonymous"
+    language: fa
+    branch: master
+    raw_text_path: "data/1250Anonymous/Anonymous.DawrKashfDawrSatr.MSS-IIS-per1.txt"
+
+  - id: anonymous_hikayatisayyidnasirkhusraw_ms_iis_per1_txt
+    title: "Hikayati Sayyid Nasir Khusraw"
+    author: "Anonymous"
+    language: fa
+    branch: master
+    raw_text_path: "data/1250Anonymous/Anonymous.HikayatiSayyidNasirKhusraw.MS-IIS-per1.txt"
