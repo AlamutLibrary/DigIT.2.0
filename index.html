@@ -484,6 +484,9 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
   /* ══ RAG toggle ══ */
   #rag-toggle { display: flex; gap: 2px; background: var(--cream); border: 1px solid var(--border); border-radius: 6px; padding: 2px; }
 
+  /* ══ Answer mode toggle ══ */
+  #answer-toggle { display: flex; gap: 2px; background: var(--cream); border: 1px solid var(--border); border-radius: 6px; padding: 2px; }
+
   /* ══ Passage count slider ══ */
   #passage-control {
     display: none; align-items: center; gap: 6px; padding: 2px 0;
@@ -663,6 +666,10 @@ mark.hit.active { background: var(--hit-active); color: #fff; }
       <button class="mode-btn active" id="rag-on"  onclick="setRAG(true)"  title="Semantic search (RAG)">RAG</button>
       <button class="mode-btn"        id="rag-off" onclick="setRAG(false)" title="Keyword search">Keys</button>
     </div>
+    <div id="answer-toggle" title="Strict = only the retrieved texts. Contextual = texts plus the AI's broader knowledge, clearly separated.">
+      <button class="mode-btn active" id="ans-strict"     onclick="setAnswerMode('strict')"     title="Answers only from the retrieved passages">Strict</button>
+      <button class="mode-btn"        id="ans-contextual" onclick="setAnswerMode('contextual')" title="Texts + broader context, clearly separated">Contextual</button>
+    </div>
     <div id="passage-control" class="visible">
       <input type="range" id="passage-slider" min="5" max="40" value="18"
              oninput="onPassageSlider(this.value)" title="Number of passages to retrieve">
@@ -825,6 +832,7 @@ let chatMode     = 'relevant';
 let passageCount = 18;
 let lastContext  = null;
 let useRAG       = true;   // true = vector search, false = keyword scoring
+let answerMode   = 'strict';   // 'strict' = corpus only, 'contextual' = corpus + flagged model knowledge
 let apiKey       = '';
 let uploadedText = '';
 let readerOpen   = false;
@@ -1425,6 +1433,12 @@ function setRAG(on) {
   if (rt) rt.style.opacity = (chatMode === 'full') ? '0.35' : '1';
 }
 
+function setAnswerMode(m) {
+  answerMode = m;
+  document.getElementById('ans-strict').classList.toggle('active', m === 'strict');
+  document.getElementById('ans-contextual').classList.toggle('active', m === 'contextual');
+}
+
 // ══ MESSAGES ══
 function renderMessages() { const wrap=document.getElementById('messages-wrap'); wrap.querySelectorAll('.msg').forEach(el=>el.remove()); messages.forEach(m=>wrap.insertBefore(buildMsgEl(m),document.getElementById('typing'))); wrap.scrollTop=wrap.scrollHeight; }
 function buildMsgEl(m) {
@@ -1780,6 +1794,17 @@ async function callClaude(userText, context) {
     throw new Error('Cloudflare Worker not configured. Please deploy worker.js and set WORKER_URL in index.html.');
   }
   const isAllMode = activeScope === 'all';
+  const groundingRules = (answerMode === 'contextual')
+    ? 'ANSWER MODE: CONTEXTUAL.\n' +
+      'Structure every answer in two clearly separated parts:\n' +
+      '1. "**From the texts:**" — what the provided passages actually say. Cite the text (title and author) and page number for each claim. This part must be strictly grounded in the passages.\n' +
+      '2. "**Broader context:**" — relevant background, connections, or explanation drawn from your own scholarly knowledge. Clearly mark this as context that is NOT from the provided passages. Be accurate and measured; if you are uncertain, say so.\n' +
+      'If the passages do not address the question, say so plainly in the first part, then you may still offer broader context in the second part.\n\n'
+    : 'ANSWER MODE: STRICT.\n' +
+      'Answer ONLY from the provided passages. Do not add information from your own knowledge. ' +
+      'Cite the text (title and author) and page number for every claim. ' +
+      'If a question cannot be answered from the provided passages, say so clearly and do not speculate.\n\n';
+
   const systemPrompt = 'You are a scholarly assistant for the Alamut Library, a Digital Library of Ismaili Texts ' +
     'specialising in Arabic and Persian Ismaili texts spanning literature, philosophy, doctrinal thought, and poetry.\n\n' +
     (isAllMode
@@ -1787,13 +1812,10 @@ async function callClaude(userText, context) {
         'retrieved from across the entire corpus based on the user\'s question. ' +
         'Always cite which text (title and author) a passage comes from in your answer with the page number, which usually follows the passage.\n\n'
       : '') +
+    groundingRules +
     'Your role:\n' +
-    '- Answer questions accurately based on the provided text passages\n' +
-    '- Always cite which text a passage comes from\n' +
-    '- Always give the page number if available\n'+
     '- Handle Arabic and Persian source texts with scholarly care\n' +
     '- When quoting Arabic or Persian, preserve the script and provide a translation\n' +
-    '- If a question cannot be answered from the provided passages, say so clearly\n' +
     '- Maintain an academic but accessible tone; respond in English unless asked otherwise\n\n' +
     (context ? 'TEXT CONTEXT:\n' + context : 'No text context provided.');
 
@@ -1815,6 +1837,7 @@ async function callClaude(userText, context) {
       'X-Mode':       chatMode,
       'X-RAG':        String(useRAG),
       'X-Passages':   String(passageCount),
+      'X-Answer-Mode': answerMode,
     },
     body: JSON.stringify({
       model:      info.model,

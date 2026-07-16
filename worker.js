@@ -94,42 +94,53 @@ async function logUsage(request, env, eventType, extra = {}) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // VECTOR SEARCH CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════════════════
+//
+// Hybrid retrieval via Qdrant Cloud Inference:
+//   - dense  : Multilingual E5 Small (384-dim) — cross-lingual semantic search
+//   - sparse : BM25                            — keyword precision
+// Qdrant embeds the query server-side (no OpenAI needed). E5 REQUIRES a "query: "
+// prefix on search text — this MUST match the "passage: " prefix used at index time.
+// ═══════════════════════════════════════════════════════════════════════════════
 
-const OPENAI_EMBED_URL  = "https://api.openai.com/v1/embeddings";
-const EMBEDDING_MODEL   = "text-embedding-3-small";
-const QDRANT_COLLECTION = "alamut-corpus";
+const QDRANT_COLLECTION = "alamut-e5-hybrid";
+const DENSE_MODEL       = "intfloat/multilingual-e5-small";
+const SPARSE_MODEL      = "qdrant/bm25";
+const E5_QUERY_PREFIX   = "query: ";   // E5 convention — do not remove
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// VECTOR SEARCH FUNCTIONS
+// HYBRID VECTOR SEARCH (dense E5 + sparse BM25, fused with RRF)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-async function embedQuery(query, env) {
-  const response = await fetch(OPENAI_EMBED_URL, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${env.OPENAI_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ model: EMBEDDING_MODEL, input: query })
-  });
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`OpenAI embedding failed: ${error}`);
-  }
-  const data = await response.json();
-  return data.data[0].embedding;
-}
+async function searchQdrantHybrid(query, topK, filter, env) {
+  const url = `${env.QDRANT_URL}/collections/${QDRANT_COLLECTION}/points/query`;
 
-async function searchQdrant(queryVector, topK, filter, env) {
-  const url = `${env.QDRANT_URL}/collections/${QDRANT_COLLECTION}/points/search`;
-  const body = { vector: queryVector, limit: topK, with_payload: true };
+  // Prefetch more than needed from each arm, then fuse and trim to topK
+  const prefetchLimit = Math.max(topK * 2, 20);
+
+  const body = {
+    prefetch: [
+      {
+        query: { text: E5_QUERY_PREFIX + query, model: DENSE_MODEL },
+        using: "dense",
+        limit: prefetchLimit,
+      },
+      {
+        query: { text: query, model: SPARSE_MODEL },
+        using: "sparse",
+        limit: prefetchLimit,
+      },
+    ],
+    query: { fusion: "rrf" },
+    limit: topK,
+    with_payload: true,
+  };
+
   if (filter && Object.keys(filter).length > 0) {
     body.filter = {
-      must: Object.entries(filter).map(([key, value]) => ({
-        key, match: { value }
-      }))
+      must: Object.entries(filter).map(([key, value]) => ({ key, match: { value } }))
     };
   }
+
   const headers = { "Content-Type": "application/json" };
   if (env.QDRANT_API_KEY) headers["api-key"] = env.QDRANT_API_KEY;
 
@@ -138,16 +149,18 @@ async function searchQdrant(queryVector, topK, filter, env) {
   });
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Qdrant search failed: ${error}`);
+    throw new Error(`Qdrant hybrid search failed: ${error}`);
   }
   const data = await response.json();
-  return data.result.map(match => ({
+  // query API returns { result: { points: [...] } }
+  const points = (data.result && data.result.points) ? data.result.points : (data.result || []);
+  return points.map(match => ({
     chunk_id:    match.payload?.chunk_id   || String(match.id),
     score:       match.score,
     text:        match.payload?.text       || "",
     book:        match.payload?.book       || "",
     book_uri:    match.payload?.book_uri   || "",
-    book_title:  match.payload?.book       || "",
+    book_title:  match.payload?.book_title || match.payload?.book || "",
     author:      match.payload?.author     || "",
     author_name: match.payload?.author_name || match.payload?.author || "",
     author_uri:  match.payload?.author_uri || "",
@@ -158,10 +171,6 @@ async function searchQdrant(queryVector, topK, filter, env) {
 }
 
 async function handleVectorSearch(request, env, corsHeaders) {
-  if (!env.OPENAI_API_KEY) {
-    return new Response(JSON.stringify({ error: { message: "OPENAI_API_KEY not configured" } }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  }
   if (!env.QDRANT_URL) {
     return new Response(JSON.stringify({ error: { message: "QDRANT_URL not configured" } }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -180,8 +189,7 @@ async function handleVectorSearch(request, env, corsHeaders) {
   }
 
   try {
-    const queryVector = await embedQuery(query, env);
-    const results     = await searchQdrant(queryVector, top_k, filter, env);
+    const results = await searchQdrantHybrid(query, top_k, filter, env);
 
     // Log the search event (fire-and-forget)
     logUsage(request, env, 'search', {
@@ -291,7 +299,7 @@ export default {
     const corsHeaders = {
       'Access-Control-Allow-Origin':  allowedOrigin,
       'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, X-API-Key, X-Provider, X-Model, X-Consent, X-Mode, X-RAG, X-Passages',
+      'Access-Control-Allow-Headers': 'Content-Type, X-API-Key, X-Provider, X-Model, X-Consent, X-Mode, X-RAG, X-Passages, X-Answer-Mode',
       'Access-Control-Max-Age':       '86400',
     };
 
@@ -329,8 +337,9 @@ export default {
     if (url.pathname === '/health') {
       return new Response(JSON.stringify({
         status:          'ok',
-        version:         '2.4',
-        embedding_model: EMBEDDING_MODEL,
+        version:         '2.5',
+        embedding_model: DENSE_MODEL + ' + ' + SPARSE_MODEL + ' (hybrid)',
+        collection:      QDRANT_COLLECTION,
         vector_search:   env.QDRANT_URL      ? 'configured' : 'not configured',
         logging:         env.ALAMUT_LOGS     ? 'configured' : 'not configured',
       }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
