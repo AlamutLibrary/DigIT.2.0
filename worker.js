@@ -49,36 +49,45 @@ async function logUsage(request, env, eventType, extra = {}) {
   const consent = request.headers.get('X-Consent') || 'no';
   if (consent !== 'yes') return;
 
-  // KV binding must exist
-  if (!env.ALAMUT_LOGS) return;
+  const entry = {
+    ts:       new Date().toISOString(),
+    type:     eventType,                                        // 'chat' | 'search'
+    country:  request.headers.get('CF-IPCountry') || 'XX',    // Cloudflare geo header
+    provider: extra.provider || null,
+    mode:     extra.mode     || null,                          // 'full' | 'relevant'
+    rag:      extra.rag      !== undefined ? extra.rag : null, // true | false
+    passages: extra.passages || null,                          // slider value
+    qlen:     extra.qlen     || null,                          // query character length
+    // query text stored only if short enough to be non-identifying (<200 chars)
+    query:    extra.query && extra.query.length <= 200 ? extra.query : null,
+  };
 
-  try {
-    const entry = {
-      ts:       new Date().toISOString(),
-      type:     eventType,                                        // 'chat' | 'search'
-      country:  request.headers.get('CF-IPCountry') || 'XX',    // Cloudflare geo header
-      provider: extra.provider || null,
-      mode:     extra.mode     || null,                          // 'full' | 'relevant'
-      rag:      extra.rag      !== undefined ? extra.rag : null, // true | false
-      passages: extra.passages || null,                          // slider value
-      qlen:     extra.qlen     || null,                          // query character length
-      // query text stored only if short enough to be non-identifying (<200 chars)
-      query:    extra.query && extra.query.length <= 200 ? extra.query : null,
-    };
+  // ── KV (keep in place) ────────────────────────────────────────────────────
+  if (env.ALAMUT_LOGS) {
+    try {
+      const date = entry.ts.slice(0, 10);
+      const key  = `logs/${date}/${crypto.randomUUID()}`;
+      await env.ALAMUT_LOGS.put(key, JSON.stringify(entry), {
+        expirationTtl: 60 * 60 * 24 * 395
+      });
+    } catch(e) {
+      console.warn('KV logging failed:', e.message);
+    }
+  }
 
-    // Key format: logs/<date>/<random-id>
-    // This allows easy listing by date range
-    const date = entry.ts.slice(0, 10); // YYYY-MM-DD
-    const uid  = crypto.randomUUID();
-    const key  = `logs/${date}/${uid}`;
-
-    // Store with 13-month expiration (TTL in seconds)
-    await env.ALAMUT_LOGS.put(key, JSON.stringify(entry), {
-      expirationTtl: 60 * 60 * 24 * 395
-    });
-  } catch(e) {
-    // Never let logging failures affect the main request
-    console.warn('Logging failed:', e.message);
+  // ── D1 (dual-write for analytics) ─────────────────────────────────────────
+  if (env.alamut_database) {
+    try {
+      await env.alamut_database.prepare(
+        `INSERT INTO events (ts, type, country, provider, mode, rag, passages, qlen, query)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        entry.ts, entry.type, entry.country, entry.provider,
+        entry.mode, entry.rag, entry.passages, entry.qlen, entry.query
+      ).run();
+    } catch(e) {
+      console.warn('D1 logging failed:', e.message);
+    }
   }
 }
 
@@ -218,6 +227,58 @@ async function handleLogViewer(request, env, corsHeaders) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// STATS ENDPOINT  (GET /v1/stats?days=30)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function handleStats(request, env, corsHeaders) {
+  if (!env.alamut_database) {
+    return new Response(JSON.stringify({ error: 'D1 database not configured' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+  const url  = new URL(request.url);
+  const days = parseInt(url.searchParams.get('days') || '30', 10);
+  const since = new Date(Date.now() - days * 86400000).toISOString();
+
+  try {
+    const [totals, byType, byCountry, byProvider, byMode] = await Promise.all([
+      env.alamut_database.prepare(
+        `SELECT COUNT(*) as total FROM events WHERE ts >= ?`
+      ).bind(since).first(),
+
+      env.alamut_database.prepare(
+        `SELECT type, COUNT(*) as count FROM events WHERE ts >= ? GROUP BY type`
+      ).bind(since).all(),
+
+      env.alamut_database.prepare(
+        `SELECT country, COUNT(*) as count FROM events WHERE ts >= ? GROUP BY country ORDER BY count DESC LIMIT 20`
+      ).bind(since).all(),
+
+      env.alamut_database.prepare(
+        `SELECT provider, COUNT(*) as count FROM events WHERE ts >= ? GROUP BY provider ORDER BY count DESC`
+      ).bind(since).all(),
+
+      env.alamut_database.prepare(
+        `SELECT mode, COUNT(*) as count FROM events WHERE ts >= ? GROUP BY mode ORDER BY count DESC`
+      ).bind(since).all(),
+    ]);
+
+    return new Response(JSON.stringify({
+      period_days: days,
+      since,
+      total:      totals.total,
+      by_type:    byType.results,
+      by_country: byCountry.results,
+      by_provider: byProvider.results,
+      by_mode:    byMode.results,
+    }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+  } catch(e) {
+    return new Response(JSON.stringify({ error: e.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // MAIN WORKER
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -248,6 +309,14 @@ export default {
       return handleVectorSearch(request, env, corsHeaders);
     }
 
+    // ── Stats ────────────────────────────────────────────────────────────────
+    if (url.pathname === '/v1/stats') {
+      if (request.method !== 'GET') {
+        return new Response('Method not allowed', { status: 405, headers: corsHeaders });
+      }
+      return handleStats(request, env, corsHeaders);
+    }
+
     // ── Log viewer ───────────────────────────────────────────────────────────
     if (url.pathname === '/v1/logs') {
       if (request.method !== 'GET') {
@@ -276,6 +345,7 @@ export default {
           '/v1/messages': 'LLM chat (POST)',
           '/v1/search':   'Vector search (POST)',
           '/v1/logs':     'Usage logs viewer (GET)',
+          '/v1/stats':    'Analytics stats (GET, ?days=30)',
           '/health':      'Health check (GET)',
         }
       }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
