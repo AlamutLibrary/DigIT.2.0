@@ -1084,7 +1084,9 @@ function openInReader(idx) {
 
 // ══ OpenITI mARkdown Renderer ══
 function renderOpenITI(raw) {
-  const lines = raw.split('\n');
+  // Normalise line endings — some source files use old-Mac \r or Windows \r\n.
+  // Without this, such files are seen as a single line and never parse.
+  const lines = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
   let html = '';
   let poetryBuffer = [];
   let paraBuffer   = [];
@@ -1141,10 +1143,29 @@ function renderOpenITI(raw) {
   lines.forEach(function(line) {
     const t = line.trim();
 
-    // ── 1. Entirely skip: blank, header-end, OpenITI root tag ──
-    if (t === '' || t === '#META#Header#End#' || /^#{6}OpenITI#/.test(t)) return;
+    // ── 1. Entirely skip: blank, header-end, OpenITI/DigIT root tag ──
+    if (t === '' || t === '#META#Header#End#' || /^#{5,6}OpenITI#/.test(t) || /^#{5}DigIT/.test(t)) return;
 
-    // ── 2. Skip META values that are NODATA / NOTGIVEN / NOCODE ──
+    // ── 1b. DigIT header labels (Author: / Title: / Manuscript: / Edition: / Comment: / Editor: / Date:) ──
+    // These appear in some files instead of #META# tags. Show as small grey labels.
+    const digitLabel = t.match(/^(Author|Title|Manuscript|Edition|Comment|Editor|Date|Translator)\s*:\s*(.+)$/i);
+    if (digitLabel) {
+      let val = digitLabel[2].trim();
+      // clean a duplicated "Author: Author:" style repeat
+      val = val.replace(/^(Author|Title|Manuscript|Edition|Comment|Editor|Date|Translator)\s*:\s*/i, '');
+      if (val) {
+        flushPoetry(); flushPara();
+        html += '<span class="oiti-ms">' + esc(val) + '</span>';
+      }
+      return;
+    }
+
+    // ── 1c. Horizontal divider: --- (3+ dashes alone, used in DigIT headers) ──
+    if (/^-{3,}$/.test(t)) {
+      flushPoetry(); flushPara();
+      html += '<hr style="border:none;border-top:1px dashed var(--border);margin:14px 0;">';
+      return;
+    }
     if (/^#META#/.test(t)) {
       const m = t.match(/::(.+)/);
       if (m) {
